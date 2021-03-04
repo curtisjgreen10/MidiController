@@ -13,14 +13,24 @@ using namespace Gtk;
 
 char* cymbalBuffer = 0;
 
-static void readCymbalFile();
-static void readMicFile();
-static void doNothing();
 static int findDataIndex(int bufferLength, char * buff);
+
+
 
 
 FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade) :
     Gtk::Window(cobject), builder(refGlade){
+
+	builder->get_widget("btnDrum1", btnDrum1);
+	builder->get_widget("btnDrum2", btnDrum2);
+	builder->get_widget("btnDrum3", btnDrum3);
+	builder->get_widget("btnDrum4", btnDrum4);
+
+	builder->get_widget("btnVolDrum1", btnVolDrum1);
+	builder->get_widget("btnVolDrum2", btnVolDrum2);
+	builder->get_widget("btnVolDrum3", btnVolDrum3);
+	builder->get_widget("btnVolDrum4", btnVolDrum4);
+
 
 	builder->get_widget("btnRecord", btnRecord);
 	builder->get_widget("btnPlayback", btnPlayback);
@@ -33,7 +43,20 @@ FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refG
 	btnRecord->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_record_button_clicked));
 	btnPlayback->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_playback_button_clicked));
 	btnStopPlayback->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_stop_playback_button_clicked));
+
+
+	btnDrum1->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_drum_x_button_clicked), 1));
+	btnDrum2->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_drum_x_button_clicked), 2));
+	btnDrum3->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_drum_x_button_clicked), 3));
+	btnDrum4->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_drum_x_button_clicked), 4));
+
+
+	btnVolDrum1->signal_value_changed().connect(sigc::mem_fun(*this, &FrmMain::on_btnVolDrum_1_value_changed));
+	btnVolDrum2->signal_value_changed().connect(sigc::mem_fun(*this, &FrmMain::on_btnVolDrum_2_value_changed));
+	btnVolDrum3->signal_value_changed().connect(sigc::mem_fun(*this, &FrmMain::on_btnVolDrum_3_value_changed));
+	btnVolDrum4->signal_value_changed().connect(sigc::mem_fun(*this, &FrmMain::on_btnVolDrum_4_value_changed));
 }
+
 
 
 unsigned __stdcall startRecorder (void* lpParam)
@@ -43,6 +66,48 @@ unsigned __stdcall startRecorder (void* lpParam)
 
 	return 0;
 }
+
+void FrmMain::on_drum_x_button_clicked(int data)
+{
+	switch(data)
+	{
+		case 1:
+			printf("Drum 1\n");
+			break;
+		case 2:
+			printf("Drum 2\n");
+			break;
+		case 3:
+			printf("Drum 3\n");
+			break;
+		case 4:
+			printf("Drum 4\n");
+			break;
+		default:
+			break;
+	}
+}
+
+void FrmMain::on_btnVolDrum_1_value_changed(int data)
+{
+	printf("Drum 1 volume: %f\n" , btnVolDrum1->get_value());
+}
+
+void FrmMain::on_btnVolDrum_2_value_changed(int data)
+{
+	printf("Drum 2 volume: %f\n" , btnVolDrum2->get_value());
+}
+
+void FrmMain::on_btnVolDrum_3_value_changed(int data)
+{
+	printf("Drum 3 volume: %f\n" , btnVolDrum3->get_value());
+}
+
+void FrmMain::on_btnVolDrum_4_value_changed(int data)
+{
+	printf("Drum 4 volume: %f\n" , btnVolDrum4->get_value());
+}
+
 
 void FrmMain::on_record_button_clicked()
 {
