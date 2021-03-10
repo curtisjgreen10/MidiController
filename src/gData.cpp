@@ -6,7 +6,7 @@
  */
 #include "gData.h"
 
-namespace GData
+namespace MidiGlobalData
 {
 	bool micInput;
 	double micInputvol;
@@ -18,4 +18,6 @@ namespace GData
 	double cymbal2vol;
 	double cymbal3vol;
 	double cymbal4vol;
+	int * drum1hits;
+	int drum1numHits;
 }

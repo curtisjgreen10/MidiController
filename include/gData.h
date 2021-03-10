@@ -5,10 +5,10 @@
  *      Author: cjgree13
  */
 
-#ifndef INCLUDE_GDATA_H_
-#define INCLUDE_GDATA_H_
+#ifndef INCLUDE_MIDIGLOBALDATA_H_
+#define INCLUDE_MIDIGLOBALDATA_H_
 
-namespace GData
+namespace MidiGlobalData
 {
 	extern bool micInput;
 	extern double micInputvol;
@@ -20,6 +20,8 @@ namespace GData
 	extern double cymbal2vol;
 	extern double cymbal3vol;
 	extern double cymbal4vol;
+	extern int * drum1hits;
+	extern int drum1numHits;
 }
 
-#endif /* INCLUDE_GDATA_H_ */
+#endif /* INCLUDE_MIDIGLOBALDATA_H_ */

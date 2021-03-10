@@ -7,6 +7,9 @@
 #include <mmsystem.h>
 #include <conio.h>
 #include <fstream>
+#include <thread>
+#include <mutex>
+#include "gData.h"
 
 using namespace Gtk;
 
@@ -14,8 +17,11 @@ using namespace Gtk;
 char* cymbalBuffer = 0;
 
 static int findDataIndex(int bufferLength, char * buff);
-
-
+static void startTimer(long seconds);
+static void startRecorder(long seconds);
+bool drum1flag = false;
+bool recordDone, timerDone = false;
+std::mutex mRecorder, mTimer, mDrum1Flag;
 
 
 FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade) :
@@ -59,20 +65,52 @@ FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refG
 
 
 
-unsigned __stdcall startRecorder (void* lpParam)
+static void startRecorder(long seconds)
 {
+	waveCapture *pwc = new waveCapture(48000, 16, 1);
 
-	// may need thread
+	DWORD bufferLength = pwc->getSuggestedBufferSize();
 
-	return 0;
+
+	if(pwc->start(0) == 0)
+	{
+
+
+		char* pWAVBuffer = new char[bufferLength];
+		pwc->createWAVEFile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/test.wav");
+
+
+		for (int i = 0; i < seconds; i++)
+		{
+			pwc->readBuffer(pWAVBuffer);
+			pwc->saveWAVEChunk(pWAVBuffer, bufferLength);
+		}
+
+
+
+		pwc->stop();
+		pwc->closeWAVEFile();
+		printf("wave file closed\n");
+	}
+	else
+	{
+		printf("error\n");
+	}
+	mRecorder.lock();
+	recordDone = true;
+	mRecorder.unlock();
 }
+
 
 void FrmMain::on_drum_x_button_clicked(int data)
 {
 	switch(data)
 	{
 		case 1:
-			printf("Drum 1\n");
+			printf("Drum 1 hit\n");
+			mDrum1Flag.lock();
+			drum1flag = true;
+			mDrum1Flag.unlock();
 			break;
 		case 2:
 			printf("Drum 2\n");
@@ -90,34 +128,121 @@ void FrmMain::on_drum_x_button_clicked(int data)
 
 void FrmMain::on_btnVolDrum_1_value_changed(int data)
 {
-	printf("Drum 1 volume: %f\n" , btnVolDrum1->get_value());
+	// update global data with new volume.
+	MidiGlobalData::drum1vol = btnVolDrum1->get_value();
 }
 
 void FrmMain::on_btnVolDrum_2_value_changed(int data)
 {
-	printf("Drum 2 volume: %f\n" , btnVolDrum2->get_value());
+	// update global data with new volume.
+	MidiGlobalData::drum2vol = btnVolDrum2->get_value();
 }
 
 void FrmMain::on_btnVolDrum_3_value_changed(int data)
 {
-	printf("Drum 3 volume: %f\n" , btnVolDrum3->get_value());
+	// update global data with new volume.
+	MidiGlobalData::drum3vol = btnVolDrum3->get_value();
 }
 
 void FrmMain::on_btnVolDrum_4_value_changed(int data)
 {
-	printf("Drum 4 volume: %f\n" , btnVolDrum4->get_value());
+	// update global data with new volume.
+	MidiGlobalData::drum4vol = btnVolDrum4->get_value();
+}
+
+static void startTimer(long seconds)
+{
+	bool flg = false;
+	int minutes_ = 0;
+	int seconds_ = 0;
+	MidiGlobalData::drum1numHits = 0;
+
+	printf("starting timer\n");
+
+    for (int i = 0; i < seconds; i++) {
+
+        // sleep system call to sleep
+        // for 1 second
+        Sleep(1000);
+
+        // increment seconds
+        seconds_++;
+
+        /*
+        // if seconds reaches 60
+        if (seconds == 60) {
+
+            // increment minutes
+            minutes++;
+            seconds = 0;
+        }
+        */
+        if(mDrum1Flag.try_lock())
+        {
+        	printf("locked 1\n");
+        	flg = drum1flag;
+        	mDrum1Flag.unlock();
+        }
+
+
+
+        if (flg)
+        {
+
+        	//FIXME global data is not thread safe, add mutex
+
+        	// store the time of drum hit
+        	//MidiGlobalData::drum1hits[i] = seconds_;
+        	// increment drum hit pointer to next index
+        	//MidiGlobalData::drum1hits++;
+        	// increment count
+        	//MidiGlobalData::drum1numHits++;
+        	// reset drum flag
+
+        	if(mDrum1Flag.try_lock())
+        	{
+        		printf("locked 2\n");
+        		drum1flag = false;
+        		mDrum1Flag.unlock();
+        	}
+
+        	printf("drum hit\n");
+        }
+
+    }
+
+    printf("Timer done\n");
+
+	for (int i = 0; i < MidiGlobalData::drum1numHits; i++)
+	{
+		printf("drum 1 hit time: %d \n", MidiGlobalData::drum1hits[i]);
+	}
+
+	mTimer.lock();
+	timerDone = true;
+	mTimer.unlock();
 }
 
 
 void FrmMain::on_record_button_clicked()
 {
-	long seconds;
 
+	long seconds = 0;
+	Glib::ustring ustr = txtSeconds->get_text();
+	std::stringstream s;
+	s << ustr.raw();
+	s >> seconds;
+
+	std::thread recorderThread(startRecorder, seconds);
+	std::thread timerThread(startTimer, seconds);
+
+
+	recorderThread.detach();
+	timerThread.detach();
+
+
+	/*
     std::ifstream infile("C:\\Users\\cjgree13\\Documents\\CSE593\\MidiController\\MidiController\\synth.wav", std::ios::binary);
-
-	waveCapture *pwc = new waveCapture(48000, 16, 1);
-
-
     if (!infile)
     {
          std::cout << "Wave::file error: "<< std::endl;
@@ -131,71 +256,8 @@ void FrmMain::on_record_button_clicked()
     infile.read (cymbalBuffer,length);  // read entire file
 
     infile.close();
-
-
     int cymbalDataIndex = findDataIndex(length, cymbalBuffer);
-
-
-	Glib::ustring ustr = txtSeconds->get_text();
-	std::stringstream s;
-	s << ustr.raw();
-	s >> seconds;
-	printf("Capturing audio\n");
-
-	/*
-	HANDLE hThread;
-	unsigned ThreadId;
-
-	// Start capturing Thread: thread[0]
-	hThread = (HANDLE)_beginthreadex(NULL, 0, startRecorder,NULL, 0, &ThreadId);
-	if (hThread == 0)
-	{
-		printf("Unable to start sound capture thread! \n\n");
-		exit(1);
-	}
-	printf("thread finished\n");
-	*/
-
-
-	DWORD bufferLength = pwc->getSuggestedBufferSize();
-
-
-	if(pwc->start(0) == 0)
-	{
-
-
-		char* pWAVBuffer = new char[bufferLength];
-		pwc->createWAVEFile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/test.wav");
-
-
-		for (int i = 0; i < seconds; i++)
-		{
-			pwc->readBuffer(pWAVBuffer);
-
-
-			if (i < 7)
-			{
-				for (int j = 0; j < bufferLength; j++)
-				{
-					// perform mixing
-					pWAVBuffer[j] = (pWAVBuffer[j] + cymbalBuffer[cymbalDataIndex + j])/2;
-				}
-			}
-
-			cymbalDataIndex = cymbalDataIndex + bufferLength;
-
-			pwc->saveWAVEChunk(pWAVBuffer, bufferLength);
-		}
-
-
-		pwc->stop();
-		pwc->closeWAVEFile();
-		printf("wave file closed\n");
-	}
-	else
-	{
-		printf("error\n");
-	}
+*/
 }
 
 static int findDataIndex(int bufferLength, char * buff)
