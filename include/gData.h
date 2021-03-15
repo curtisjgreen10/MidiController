@@ -20,7 +20,7 @@ namespace MidiGlobalData
 	extern double cymbal2vol;
 	extern double cymbal3vol;
 	extern double cymbal4vol;
-	extern int * drum1hits;
+	extern double drum1hits[64];
 	extern int drum1numHits;
 }
 

@@ -22,6 +22,7 @@ static void startRecorder(long seconds);
 bool drum1flag = false;
 bool recordDone, timerDone = false;
 std::mutex mRecorder, mTimer, mDrum1Flag;
+std::mutex gMidiData;
 
 
 FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade) :
@@ -107,7 +108,7 @@ void FrmMain::on_drum_x_button_clicked(int data)
 	switch(data)
 	{
 		case 1:
-			printf("Drum 1 hit\n");
+			//printf("Drum 1 hit\n");
 			mDrum1Flag.lock();
 			drum1flag = true;
 			mDrum1Flag.unlock();
@@ -154,19 +155,19 @@ static void startTimer(long seconds)
 {
 	bool flg = false;
 	int minutes_ = 0;
-	int seconds_ = 0;
+	double seconds_ = 0;
 	MidiGlobalData::drum1numHits = 0;
 
-	printf("starting timer\n");
+	//printf("starting timer\n");
 
-    for (int i = 0; i < seconds; i++) {
+    for (int i = 0; i <= (seconds*2); i++) {
 
         // sleep system call to sleep
         // for 1 second
-        Sleep(1000);
+        Sleep(500);
 
-        // increment seconds
-        seconds_++;
+        // increment half second increments
+        seconds_ = seconds_ + 0.5;
 
         /*
         // if seconds reaches 60
@@ -179,7 +180,7 @@ static void startTimer(long seconds)
         */
         if(mDrum1Flag.try_lock())
         {
-        	printf("locked 1\n");
+        	//printf("locked 1\n");
         	flg = drum1flag;
         	mDrum1Flag.unlock();
         }
@@ -188,35 +189,37 @@ static void startTimer(long seconds)
 
         if (flg)
         {
+        	//printf("update global data\n");
 
-        	//FIXME global data is not thread safe, add mutex
-
+        	gMidiData.lock();
         	// store the time of drum hit
-        	//MidiGlobalData::drum1hits[i] = seconds_;
-        	// increment drum hit pointer to next index
-        	//MidiGlobalData::drum1hits++;
+        	MidiGlobalData::drum1hits[MidiGlobalData::drum1numHits] = seconds_;
+        	printf("second: %f \n", seconds_);
         	// increment count
-        	//MidiGlobalData::drum1numHits++;
+        	MidiGlobalData::drum1numHits++;
         	// reset drum flag
+        	gMidiData.unlock();
 
         	if(mDrum1Flag.try_lock())
         	{
-        		printf("locked 2\n");
+        		//printf("locked 2\n");
         		drum1flag = false;
         		mDrum1Flag.unlock();
         	}
 
-        	printf("drum hit\n");
+        	//printf("drum hit\n");
         }
 
     }
 
-    printf("Timer done\n");
+    //printf("Timer done\n");
 
+    gMidiData.lock();
 	for (int i = 0; i < MidiGlobalData::drum1numHits; i++)
 	{
-		printf("drum 1 hit time: %d \n", MidiGlobalData::drum1hits[i]);
+		printf("drum 1 hit time: %f \n", MidiGlobalData::drum1hits[i]);
 	}
+	gMidiData.unlock();
 
 	mTimer.lock();
 	timerDone = true;
@@ -235,7 +238,6 @@ void FrmMain::on_record_button_clicked()
 
 	std::thread recorderThread(startRecorder, seconds);
 	std::thread timerThread(startTimer, seconds);
-
 
 	recorderThread.detach();
 	timerThread.detach();

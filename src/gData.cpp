@@ -18,6 +18,6 @@ namespace MidiGlobalData
 	double cymbal2vol;
 	double cymbal3vol;
 	double cymbal4vol;
-	int * drum1hits;
+	double drum1hits[64];
 	int drum1numHits;
 }
