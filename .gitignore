@@ -2,3 +2,15 @@
 *.o
 *.wav
 *.exe
+*.html
+*.png
+*.js
+*.tex
+*.sty
+*.svg
+*.css
+src/latex/make.bat
+*.eps
+*.bat
+include/latex/Makefile
+src/latex/Makefile

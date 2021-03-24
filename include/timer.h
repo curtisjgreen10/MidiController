@@ -17,8 +17,18 @@ private:
 	std::chrono::duration<float> duration;
 
 public:
+    //! \brief Stores the current time as a means of staring the Timer. Must be called to restart Timer.
+	//!
 	void Start();
+
+	//! \brief Get the elapsed time since the start of the timer in seconds.
+	//!
+	//! @return Elapsed time since start of timer in seconds.
 	float GetElapsedTimeSeconds();
+
+	//! \brief Get the elapsed time since the start of the timer in milliseconds.
+	//!
+	//! @return Elapsed time since start of timer in milliseconds.
 	float GetElapsedTimeMilliSeconds();
 };
 

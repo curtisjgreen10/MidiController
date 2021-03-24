@@ -11,6 +11,7 @@
 #include <mutex>
 #include "gData.h"
 #include "timer.h"
+#include "digFilter.h"
 
 using namespace Gtk;
 
@@ -19,6 +20,7 @@ char* cymbalBuffer = 0;
 static int findDataIndex(int bufferLength, char * buff);
 static void startRecorder(long seconds);
 Timer timer;
+FirFilter fir;
 
 
 
@@ -66,37 +68,15 @@ FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refG
 
 static void startRecorder(long seconds)
 {
-	waveCapture *pwc = new waveCapture(48000, 16, 1);
-
-	DWORD bufferLength = pwc->getSuggestedBufferSize();
-
-
-	if(pwc->start(0) == 0)
-	{
-
-
-		char* pWAVBuffer = new char[bufferLength];
-		pwc->createWAVEFile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/test.wav");
-
-
-		for (int i = 0; i < seconds; i++)
-		{
-			pwc->readBuffer(pWAVBuffer);
-			pwc->saveWAVEChunk(pWAVBuffer, bufferLength);
-		}
-		pwc->stop();
-		pwc->closeWAVEFile();
-		printf("wave file closed\n");
-	}
-	else
-	{
-		printf("error\n");
-	}
+	DigFilter::FirFilterInit(&fir);
+	DigFilter::StartVoiceRecorder(&fir,seconds);
 }
 
 
 void FrmMain::on_drum_x_button_clicked(int data)
 {
+
+
 	switch(data)
 	{
 		case 1:
