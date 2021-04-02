@@ -21,6 +21,7 @@ static int findDataIndex(int bufferLength, char * buff);
 static void startRecorder(long seconds);
 Timer timer;
 FirFilter fir;
+IirFilter iir;
 
 
 
@@ -68,8 +69,9 @@ FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refG
 
 static void startRecorder(long seconds)
 {
-	DigFilter::FirFilterInit(&fir);
-	DigFilter::StartVoiceRecorder(&fir,seconds);
+	printf("thread started\n");
+	DigFilter::IirFilterInit(&iir);
+	DigFilter::StartVoiceRecorder(&iir,seconds);
 }
 
 
@@ -123,6 +125,7 @@ void FrmMain::on_btnVolDrum_4_value_changed(int data)
 
 void FrmMain::on_record_button_clicked()
 {
+	printf("button clicked\n");
 
 	long seconds = 0;
 	Glib::ustring ustr = txtSeconds->get_text();
