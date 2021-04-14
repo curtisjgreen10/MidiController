@@ -244,9 +244,7 @@ DWORD waveCapture::readBuffer(char* pWAVBuffer)
 		if(buff[_dwBufferCount]->dwFlags & WHDR_DONE)
 		{
 			_dwBytesRecorded = buff[_dwBufferCount]->dwBytesRecorded;
-			//printf("Bytes Recorded: %d \n", (int)_dwBytesRecorded);
 			memcpy(pWAVBuffer, buff[_dwBufferCount]->lpData, buff[_dwBufferCount]->dwBytesRecorded);
-			//printf(buff[_dwBufferCount]->lpData);
 			waveInAddBuffer(hwi, buff[_dwBufferCount], sizeof(WAVEHDR));
 		}
 

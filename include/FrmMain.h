@@ -14,6 +14,14 @@ protected:
     Gtk::VolumeButton *btnVolDrum2;
     Gtk::VolumeButton *btnVolDrum3;
     Gtk::VolumeButton *btnVolDrum4;
+    Gtk::Button *btnCymbal1;
+    Gtk::Button *btnCymbal2;
+    Gtk::Button *btnCymbal3;
+    Gtk::Button *btnCymbal4;
+    Gtk::VolumeButton *btnVolCymbal1;
+    Gtk::VolumeButton *btnVolCymbal2;
+    Gtk::VolumeButton *btnVolCymbal3;
+    Gtk::VolumeButton *btnVolCymbal4;
     Gtk::Entry *txtSeconds;
 
 public:
@@ -26,9 +34,18 @@ protected:
     void on_playback_button_clicked();
     void on_stop_playback_button_clicked();
     void on_entry_activated();
+
+    //drum controls signal handlers
     void on_drum_x_button_clicked(int data);
     void on_btnVolDrum_1_value_changed(int data);
     void on_btnVolDrum_2_value_changed(int data);
     void on_btnVolDrum_3_value_changed(int data);
     void on_btnVolDrum_4_value_changed(int data);
+
+    //cymbal controls signal handlers
+    void on_cymbal_x_button_clicked(int data);
+    void on_btnVolCymbal_1_value_changed(int data);
+    void on_btnVolCymbal_2_value_changed(int data);
+    void on_btnVolCymbal_3_value_changed(int data);
+    void on_btnVolCymbal_4_value_changed(int data);
 };

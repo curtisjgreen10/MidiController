@@ -15,3 +15,4 @@ src/latex/make.bat
 include/latex/Makefile
 src/latex/Makefile
 .settings/language.settings.xml
+*.txt

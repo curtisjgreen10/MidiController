@@ -1,0 +1,39 @@
+/*
+ * firFilter.h
+ *
+ *  Created on: Apr 13, 2021
+ *      Author: cjgree13
+ */
+#ifndef INCLUDE_FIRFILTER_H_
+#define INCLUDE_FIRFILTER_H_
+#include <stdint.h>
+
+#define FIR_FILTER_LENGTH 257
+
+typedef struct
+{
+	double buf[FIR_FILTER_LENGTH];
+	uint16_t bufIndex;
+	double out;
+} FirData;
+
+class FirFilter
+{
+
+private:
+
+
+public:
+	//! \brief TBD.
+	//!
+	//! @return TBD.
+	void FirFilterInit(FirData *fir);
+
+
+	//! \brief TBD.
+	//!
+	//! @return TBD.
+	double FirFilterUpdate(FirData *fir, double input);
+};
+
+#endif /* INCLUDE_FIRFILTER_H_ */
