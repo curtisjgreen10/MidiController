@@ -9,22 +9,15 @@
 #include <fstream>
 #include <thread>
 #include <mutex>
+#include "audio.h"
 #include "gData.h"
 #include "timer.h"
-#include "digFilter.h"
 
 using namespace Gtk;
 
-
-char* cymbalBuffer = 0;
-static int findDataIndex(int bufferLength, char * buff);
 static void startRecorder(long seconds);
-Timer timer;
-FirFilter fir;
-IirFilter iir;
-
-
-
+Timer *timer;
+Audio *audioCtrl;
 
 FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade) :
     Gtk::Window(cobject), builder(refGlade){
@@ -94,23 +87,27 @@ static void startRecorder(long seconds)
 
 void FrmMain::on_drum_x_button_clicked(int data)
 {
-	switch(data)
+	if(audioCtrl->getIsRecording())
 	{
-		case 1:
-			MidiGlobalData::drum1hits[MidiGlobalData::drum1numHits] = timer.GetElapsedTimeMilliSeconds();
-			MidiGlobalData::drum1numHits++;
-			break;
-		case 2:
-			printf("Drum 2\n");
-			break;
-		case 3:
-			printf("Drum 3\n");
-			break;
-		case 4:
-			printf("Drum 4\n");
-			break;
-		default:
-			break;
+		switch(data)
+		{
+			case 1:
+				MidiGlobalData::drum1hits[MidiGlobalData::drum1numHits] = timer->GetElapsedTimeMilliSeconds();
+				MidiGlobalData::drum1numHits++;
+				audioCtrl->ReadPreRecordedWavData(DRUM_1);
+				break;
+			case 2:
+				printf("Drum 2\n");
+				break;
+			case 3:
+				printf("Drum 3\n");
+				break;
+			case 4:
+				printf("Drum 4\n");
+				break;
+			default:
+				break;
+		}
 	}
 }
 
@@ -140,25 +137,27 @@ void FrmMain::on_btnVolDrum_4_value_changed(int data)
 
 void FrmMain::on_cymbal_x_button_clicked(int data)
 {
-
-
-	switch(data)
+	if(audioCtrl->getIsRecording())
 	{
-		case 1:
-			MidiGlobalData::drum1hits[MidiGlobalData::drum1numHits] = timer.GetElapsedTimeMilliSeconds();
-			MidiGlobalData::drum1numHits++;
-			break;
-		case 2:
-			printf("Drum 2\n");
-			break;
-		case 3:
-			printf("Drum 3\n");
-			break;
-		case 4:
-			printf("Drum 4\n");
-			break;
-		default:
-			break;
+		switch(data)
+		{
+			case 1:
+				MidiGlobalData::drum1hits[MidiGlobalData::drum1numHits] = timer->GetElapsedTimeMilliSeconds();
+				MidiGlobalData::drum1numHits++;
+
+				break;
+			case 2:
+				printf("Drum 2\n");
+				break;
+			case 3:
+				printf("Drum 3\n");
+				break;
+			case 4:
+				printf("Drum 4\n");
+				break;
+			default:
+				break;
+		}
 	}
 }
 
@@ -188,6 +187,7 @@ void FrmMain::on_btnVolCymbal_4_value_changed(int data)
 
 void FrmMain::on_record_button_clicked()
 {
+	audioCtrl->setIsRecording(true);
 	printf("button clicked\n");
 
 	long seconds = 0;
@@ -196,7 +196,7 @@ void FrmMain::on_record_button_clicked()
 	s << ustr.raw();
 	s >> seconds;
 
-	timer.Start();
+	timer->Start();
 
 	std::thread recorderThread(startRecorder, seconds);
 
