@@ -27,7 +27,6 @@
 /* (v0.2) Thanks to user "shodan" from forum.html.it for fixing some bugs */
 
 #include "waveCapture.h"
-#include <fstream>
 
 // Define class version:
 const char waveCapture::szVersion[32] = "waveCapture Class v0.1";

@@ -5,7 +5,6 @@
  *      Author: cjgree13
  */
 #include "audio.h"
-#include "waveCapture.h"
 #include "gData.h"
 #include <tgmath.h>
 

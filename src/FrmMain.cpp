@@ -1,15 +1,12 @@
+#include "audio.h"
 #include "FrmMain.h"
 #include "micInput.h"
-#include "waveCapture.h"
 #include <iostream>
-#include <windows.h>
 #include <stdio.h>
 #include <mmsystem.h>
 #include <conio.h>
-#include <fstream>
 #include <thread>
 #include <mutex>
-#include "audio.h"
 #include "gData.h"
 #include "timer.h"
 

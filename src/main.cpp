@@ -1,5 +1,4 @@
-#include <FrmMain.h>
-#include <gtkmm.h>
+#include "FrmMain.h"
 
 int main(int argc, char* argv[])
 {
