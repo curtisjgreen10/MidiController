@@ -36,9 +36,9 @@ void Audio::DigitalFilterInit(FilterType filt)
 void Audio::StartVoiceRecorder(long sec)
 {
 	seconds = sec;
-	waveCapture *pwc = new waveCapture(SAMPLING_RATE, 16, 1);
+	pwc = new waveCapture(SAMPLING_RATE, 16, 1);
 
-	DWORD buffLen = RecordVoiceData(pwc);
+	RecordVoiceData(pwc);
 
 	// filtering is currently being bypassed.
 	// update SaveVoiceData to use wavBufferDouble or output to incorporate filtering
@@ -157,9 +157,9 @@ double Audio::NormalizeData(double * data, int dataLen, int p)
 	return sum;
 }
 
-void Audio::UpdateTotalPreRecordedWav(int bufferlen)
+void Audio::UpdateTotalPreRecordedWav(int bufferlen, double time)
 {
-	int startIndex = MidiGlobalData::drum1hits[0] * SAMPLING_RATE;
+	int startIndex = time * SAMPLING_RATE;
 
 	for (int i = startIndex; i < bufferlen; i++)
 	{
@@ -167,7 +167,7 @@ void Audio::UpdateTotalPreRecordedWav(int bufferlen)
 	}
 }
 
-void Audio::ReadPreRecordedWavData(WavFile wav)
+void Audio::ReadPreRecordedWavData(WavFile wav, double time)
 {
 	std::ifstream infile;
 
@@ -216,7 +216,7 @@ void Audio::ReadPreRecordedWavData(WavFile wav)
 		preRecBuffInit = true;
 	}
 
-	UpdateTotalPreRecordedWav(length);
+	UpdateTotalPreRecordedWav(length, time);
 }
 
 int Audio::FindDataIndex(int bufferLength, char * buff)

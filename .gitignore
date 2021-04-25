@@ -16,3 +16,4 @@ include/latex/Makefile
 src/latex/Makefile
 .settings/language.settings.xml
 *.txt
+*.xml

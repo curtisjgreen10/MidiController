@@ -1,4 +1,6 @@
 #include <gtkmm.h>
+#include "audio.h"
+#include "timer.h"
 
 class FrmMain : public Gtk::Window{
 protected:
@@ -23,6 +25,9 @@ protected:
     Gtk::VolumeButton *btnVolCymbal3;
     Gtk::VolumeButton *btnVolCymbal4;
     Gtk::Entry *txtSeconds;
+
+    Timer *timer;
+    Audio *audioCtrl;
 
 public:
 

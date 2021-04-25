@@ -1,4 +1,3 @@
-#include "audio.h"
 #include "FrmMain.h"
 #include "micInput.h"
 #include <iostream>
@@ -8,13 +7,12 @@
 #include <thread>
 #include <mutex>
 #include "gData.h"
-#include "timer.h"
+
 
 using namespace Gtk;
 
 static void startRecorder(long seconds);
-Timer *timer;
-Audio *audioCtrl;
+
 
 FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade) :
     Gtk::Window(cobject), builder(refGlade){
@@ -89,9 +87,7 @@ void FrmMain::on_drum_x_button_clicked(int data)
 		switch(data)
 		{
 			case 1:
-				MidiGlobalData::drum1hits[MidiGlobalData::drum1numHits] = timer->GetElapsedTimeMilliSeconds();
-				MidiGlobalData::drum1numHits++;
-				audioCtrl->ReadPreRecordedWavData(DRUM_1);
+				audioCtrl->ReadPreRecordedWavData(DRUM_1, timer->GetElapsedTimeMilliSeconds());
 				break;
 			case 2:
 				printf("Drum 2\n");
@@ -139,9 +135,7 @@ void FrmMain::on_cymbal_x_button_clicked(int data)
 		switch(data)
 		{
 			case 1:
-				MidiGlobalData::drum1hits[MidiGlobalData::drum1numHits] = timer->GetElapsedTimeMilliSeconds();
-				MidiGlobalData::drum1numHits++;
-
+				audioCtrl->ReadPreRecordedWavData(DRUM_1, timer->GetElapsedTimeMilliSeconds());
 				break;
 			case 2:
 				printf("Drum 2\n");
