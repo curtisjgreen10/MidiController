@@ -46,9 +46,6 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="MidiController.null.896507163" name="MidiController"/>
 	</storageModule>
-	<storageModule moduleId="scannerConfiguration">
-		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 	<storageModule moduleId="refreshScope" versionNumber="2">
 		<configuration configurationName="Default">
@@ -89,5 +86,14 @@
 				<runAllBuilders>true</runAllBuilders>
 			</target>
 		</buildTargets>
+	</storageModule>
+	<storageModule moduleId="scannerConfiguration">
+		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.mingw.base.2146817359;cdt.managedbuild.toolchain.gnu.mingw.base.2146817359.2067167980;cdt.managedbuild.tool.gnu.c.compiler.mingw.base.1679918490;cdt.managedbuild.tool.gnu.c.compiler.input.32383586">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.mingw.base.2146817359;cdt.managedbuild.toolchain.gnu.mingw.base.2146817359.2067167980;cdt.managedbuild.tool.gnu.cpp.compiler.mingw.base.331207186;cdt.managedbuild.tool.gnu.cpp.compiler.input.1062750231">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 	</storageModule>
 </cproject>

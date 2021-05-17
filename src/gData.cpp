@@ -19,4 +19,5 @@ namespace MidiGlobalData
 	double cymbal3vol;
 	double cymbal4vol;
 	double drum1hitTime;
+	bool recording = false;
 }

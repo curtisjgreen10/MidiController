@@ -53,4 +53,6 @@ protected:
     void on_btnVolCymbal_2_value_changed(int data);
     void on_btnVolCymbal_3_value_changed(int data);
     void on_btnVolCymbal_4_value_changed(int data);
+    void static startRecorder(Audio* audio);
+    void static cleanUpHeap(Audio* audio, Timer * timer);
 };

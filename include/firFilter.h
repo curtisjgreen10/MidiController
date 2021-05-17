@@ -8,7 +8,7 @@
 #define INCLUDE_FIRFILTER_H_
 #include <stdint.h>
 
-#define FIR_FILTER_LENGTH 257
+#define FIR_FILTER_LENGTH 65
 
 typedef struct
 {

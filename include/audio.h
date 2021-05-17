@@ -1,5 +1,5 @@
 /*
- * digFilter.h
+ * audio.h
  *
  *  Created on: Mar 19, 2021
  *      Author: cjgree13
@@ -12,6 +12,8 @@
 #include "waveCapture.h"
 
 #define SAMPLING_RATE 48000
+
+
 
 //! Enum used for filter type.
 typedef enum FilterType
@@ -37,29 +39,28 @@ class Audio
 {
 
 private:
-	bool recording = false; /*!< true if software is recording */
-	long seconds = 0;	/*!< seconds recorded */
+
+	int dataIndex;
+
 	DWORD bufferLength = 0;	/*!< buffer length of wavBufferChar */
 	bool preRecBuffInit = false; /*!< true if space has already been allocated reading pre-recorded wav files */
 
-	char* wavBufferChar;	/*!< buffer to hold voice data in char format */
+	char* wavBufferChar;	/*!< buffer to hold raw voice data in char format */
+	char* wavBufferCharTotal;	/*!< buffer to hold raw voice data in char format */
 	double* wavBufferDouble;	/*!< buffer to hold voice data in double format */
+	double* wavBufferDoubleOutput;	/*!< buffer to hold voice data in double format */
 	char* preRecWavBuffer;	/*!< buffer to hold pre-recorded wav data */
 	char* totalPreRecWavBuffer;	/*!< buffer to hold total pre-recorded wav data */
+	double normalizeFactor;
 
 	waveCapture *pwc;	/*!< wave capture object pointer */
-	FirData *firDat;	/*!< fir filter data */
+	FirData firDat;	/*!< fir filter data */
 	FirFilter *firFilt;	/*!< fir filter class object pointer */
-	IirData *iirDat;	/*!< fir filter data */
+	IirData iirDat;	/*!< fir filter data */
 	IirFilter *iirFilt;	/*!< iir filter class object pointer */
 	FilterType fType = FIR; /*!< initialized to fir and reset in init method */
 
-	//! \brief Finds the index after header in a wav file where the data is located.
-	//!
-	//! @param bufferLength		Length of the wav data buffer to search.
-	//! @param buff		Wav data buffer to search through.
-	//! @return		Starting index of data in wav file.
-	int FindDataIndex(int bufferLength, char * buff);
+
 
 	//! \brief Normalizes a buffer of data using p-norm to a range of -1.0 and 1.0.
 	//!
@@ -67,7 +68,7 @@ private:
 	//! @param dataLen		Length of data buffer.
 	//! @param p		P value for p-norm equation.
 	//! @return		Magnitude of data (can be used to un-normalize data).
-	double NormalizeData(double * data, int dataLen, int p);
+	void NormalizeData(double * data, int dataLen, int p, bool normailze);
 
 	//! \brief Records voice from microphone input.
 	//!
@@ -86,6 +87,14 @@ private:
 	void UpdateTotalPreRecordedWav(int bufferlen, double time);
 
 public:
+	long seconds = 0;	/*!< seconds recorded */
+
+	//! \brief Finds the index after header in a wav file where the data is located.
+	//!
+	//! @param bufferLength		Length of the wav data buffer to search.
+	//! @param buff		Wav data buffer to search through.
+	//! @return		Starting index of data in wav file.
+	int FindDataIndex(int bufferLength, char * buff);
 
 	//! \brief Get whether or not the software is recording.
 	//!

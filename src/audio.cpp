@@ -7,8 +7,10 @@
 #include "audio.h"
 #include "gData.h"
 #include <tgmath.h>
+#include <iostream>
+#include <cmath>
 
-
+/*
 bool Audio::getIsRecording()
 {
 	return recording;
@@ -18,17 +20,20 @@ void Audio::setIsRecording(bool rec)
 {
 	recording = rec;
 }
+*/
 
 void Audio::DigitalFilterInit(FilterType filt)
 {
 	if (filt == FIR)
 	{
-		firFilt->FirFilterInit(firDat);
+		firFilt = new FirFilter();
+		firFilt->FirFilterInit(&firDat);
 		fType = FIR;
 	}
 	else if (filt == IIR)
 	{
-		iirFilt->IirFilterInit(iirDat);
+		iirFilt = new IirFilter();
+		iirFilt->IirFilterInit(&iirDat);
 		fType = IIR;
 	}
 }
@@ -42,23 +47,25 @@ void Audio::StartVoiceRecorder(long sec)
 
 	// filtering is currently being bypassed.
 	// update SaveVoiceData to use wavBufferDouble or output to incorporate filtering
-	/*
 
-	double* output = new double[seconds*buffLen];
 
+	wavBufferDoubleOutput = new double[seconds*bufferLength];
+/*
 	if (fType == FIR)
 	{
-		for (int i = 0; i < buffLen*seconds; i++)
+		for (int i = 0; i < bufferLength*seconds; i++)
 		{
-			firFilt->FirFilterUpdate(firDat, wavBufferDouble[i]);
+			wavBufferDoubleOutput[i] = firFilt->FirFilterUpdate(&firDat, wavBufferDouble[i]);
 		}
 	}
 	else if (fType == IIR)
 	{
-		iirFilt->RunIIRBiquadForm1(iirDat, wavBufferDouble, output, buffLen*seconds);
+		//iirFilt->RunIIRBiquadForm1(&iirDat, wavBufferDouble, output, buffLen*seconds);
 	}
-
 	*/
+
+	// un-normalize data
+	//NormalizeData(wavBufferDouble, seconds*bufferLength, 0, false);
 
 	SaveVoiceData(pwc);
 }
@@ -66,48 +73,52 @@ void Audio::StartVoiceRecorder(long sec)
 DWORD Audio::RecordVoiceData(waveCapture *wav)
 {
 	bufferLength = wav->getSuggestedBufferSize();
+	FILE * pFile1;
+	pFile1 = fopen ("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/pre_data.txt","w");
 
 	if(wav->start(0) == 0)
 	{
 
-		/*
-		FILE * pFile1;
-		pFile1 = fopen ("pre_normalized.txt","w");
-
-
-		FILE * pFile2;
-		pFile2 = fopen ("normailzed.txt","w");
-
-		FILE * pFile3;
-		pFile3 = fopen ("filtered.txt","w");
-		*/
-		FILE * pFile4;
-		pFile4 = fopen ("filtered_mag.txt","w");
-
-		FILE * pFile5;
-		pFile5 = fopen ("normalized_mag.txt","w");
-
-
 		wavBufferChar = new char[bufferLength];
-		wavBufferDouble = new double[seconds*bufferLength];
-		//double* pWAVBuffer3 = new double[seconds*bufferLength];
-		//double* output = new double[seconds*bufferLength];
+		wavBufferCharTotal = new char[bufferLength*seconds];
+		wavBufferDouble = new double[bufferLength*seconds];
 		wav->createWAVEFile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/test.wav");
+
+		int idx = 0;
+		char byte1;
+		char byte2;
+		int16_t sample = 0;
 
 		for (int i = 0; i < seconds; i++)
 		{
 			wav->readBuffer(wavBufferChar);
-
 			for (int j = 0; j < bufferLength; j++)
 			{
-				wavBufferDouble[j + (i * bufferLength)] = (double)wavBufferChar[j];
+				wavBufferCharTotal[j +(i * bufferLength)] = wavBufferChar[j];
 			}
-
 		}
 
+		for (int i = 0; i < bufferLength*seconds; i+=2)
+		{
+			// convert to byte data to 16 bit little endian
+			sample = 0;
 
-		NormalizeData(wavBufferDouble, seconds*bufferLength, 4);
+			byte1 = wavBufferCharTotal[i];
+			fprintf(pFile1, "%d", byte1);
+			fprintf(pFile1, "\n");
 
+			byte2 = wavBufferChar[i+1];
+			fprintf(pFile1, "%d", byte2);
+			fprintf(pFile1, "\n");
+
+			sample = byte2 << 8;
+			sample |= (byte1 & 0xFF);
+			// cast new 16-bit data to double for processing
+			wavBufferDouble[idx] = (double)ceil(sample);
+			idx++;
+		}
+
+		NormalizeData(wavBufferDouble, seconds*bufferLength, 4, true);
 		return bufferLength;
 	}
 	else
@@ -121,40 +132,87 @@ DWORD Audio::RecordVoiceData(waveCapture *wav)
 
 void Audio::SaveVoiceData(waveCapture *wav)
 {
+	char byte1 = 0;
+	char byte2 = 0;
 	double temp1 = 0;
+	int16_t sample = 0;
+	int idx = 0;
+	FILE * pFile1;
+	pFile1 = fopen ("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/post_data.txt","w");
+
+	for (int j = 0; j < bufferLength*seconds; j+=2)
+	{
+		// cast back to 16-bit data
+		sample = (int16_t)wavBufferDouble[idx];
+		// convert 16-bit data back to 8-bit.
+		byte1 = (sample & 0xFF);
+		fprintf(pFile1, "%d", byte1);
+		fprintf(pFile1, "\n");
+
+		byte2 = ((sample >> 8) & 0xFF);
+		fprintf(pFile1, "%d", byte2);
+		fprintf(pFile1, "\n");
+
+		wavBufferCharTotal[j] = byte1;
+		wavBufferCharTotal[j+1] = byte2;
+		idx++;
+	}
+
 	for (int i = 0; i < seconds; i++)
 	{
 		for (int j = 0; j < bufferLength; j++)
 		{
-			wavBufferChar[j] = (char)temp1;
+			wavBufferChar[j] = wavBufferCharTotal[j +(i * bufferLength)];
 		}
 		wav->saveWAVEChunk(wavBufferChar, bufferLength);
 	}
+
+
+
+	//std::ofstream outfile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/test_filtered.wav", std::ios::binary);
+	//outfile.write(wavBufferChar, bufferLength);
+	//outfile.close();
+
 	wav->stop();
 	wav->closeWAVEFile();
 	printf("wave file closed\n");
+
+	// clean-up the heap
+	delete[] wavBufferChar;
+	delete[] wavBufferCharTotal;
+	delete[] wavBufferDouble;
+	delete[] wavBufferDoubleOutput;
 }
 
-double Audio::NormalizeData(double * data, int dataLen, int p)
+void Audio::NormalizeData(double * data, int dataLen, int p, bool normalize)
 {
 	double sum = 0;
-	double* tempBuf = new double[dataLen];
 
-	for (int i = 0; i < dataLen; i++)
+	if (normalize)
 	{
-		tempBuf[i] = abs(data[i]);
-		tempBuf[i] = pow(tempBuf[i],(double)p);
-		sum += tempBuf[i];
+		double* tempBuf = new double[dataLen];
+
+		for (int i = 0; i < dataLen; i++)
+		{
+			tempBuf[i] = abs(data[i]);
+			tempBuf[i] = pow(tempBuf[i],(double)p);
+			sum += tempBuf[i];
+		}
+
+		normalizeFactor = pow(sum,1.0/(double)p);
+
+		for (int i = 0; i < dataLen; i++)
+		{
+			data[i] = data[i] / normalizeFactor;
+		}
 	}
-
-	sum = pow(sum,1.0/(double)p);
-
-	for (int i = 0; i < dataLen; i++)
+	else
 	{
-		data[i] = data[i] / sum;
+		for (int i = 0; i < dataLen; i++)
+		{
+			data[i] = data[i]*normalizeFactor;
+		}
 	}
-
-	return sum;
 }
 
 void Audio::UpdateTotalPreRecordedWav(int bufferlen, double time)

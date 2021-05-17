@@ -11,7 +11,6 @@
 
 using namespace Gtk;
 
-static void startRecorder(long seconds);
 
 
 FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade) :
@@ -71,18 +70,24 @@ FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refG
 
 
 
-static void startRecorder(long seconds)
+void FrmMain::startRecorder(Audio* audio)
 {
-	//printf("thread started\n");
-	//DigFilter::IirFilterInit(&iir);
-	//DigFilter::FirFilterInit(&fir);
-	//DigFilter::StartVoiceRecorder(&fir,seconds);
+	printf("record thread started\n");
+	audio->DigitalFilterInit(FIR);
+	audio->StartVoiceRecorder(audio->seconds);
 }
 
+void FrmMain::cleanUpHeap(Audio* audio, Timer * timer)
+{
+	printf("clean up thread started\n");
+	while(MidiGlobalData::recording == true);
+	delete timer;
+	delete audio;
+}
 
 void FrmMain::on_drum_x_button_clicked(int data)
 {
-	if(audioCtrl->getIsRecording())
+	if(MidiGlobalData::recording)
 	{
 		switch(data)
 		{
@@ -130,7 +135,7 @@ void FrmMain::on_btnVolDrum_4_value_changed(int data)
 
 void FrmMain::on_cymbal_x_button_clicked(int data)
 {
-	if(audioCtrl->getIsRecording())
+	if(MidiGlobalData::recording)
 	{
 		switch(data)
 		{
@@ -178,23 +183,31 @@ void FrmMain::on_btnVolCymbal_4_value_changed(int data)
 
 void FrmMain::on_record_button_clicked()
 {
-	audioCtrl->setIsRecording(true);
+	MidiGlobalData::recording = true;
+
+    timer = new Timer();
+    audioCtrl = new Audio();
+
 	printf("button clicked\n");
 
-	long seconds = 0;
+	//long seconds = 0;
 	Glib::ustring ustr = txtSeconds->get_text();
 	std::stringstream s;
 	s << ustr.raw();
-	s >> seconds;
+	s >> audioCtrl->seconds;
 
 	timer->Start();
 
-	std::thread recorderThread(startRecorder, seconds);
+	std::thread recorderThread(startRecorder, audioCtrl);
 
 	recorderThread.detach();
+
+	/*
+	std::thread cleanupThread(cleanUpHeap, audioCtrl, timer);
+
+	cleanupThread.detach();
+	*/
 }
-
-
 
 unsigned __stdcall startPlayer (void* lpParam)
 {
@@ -204,8 +217,8 @@ unsigned __stdcall startPlayer (void* lpParam)
 
 void FrmMain::on_playback_button_clicked()
 {
-	/*
-    std::ifstream infile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/test.wav", std::ios::binary);
+
+    std::ifstream infile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/test.wav", std::ios::binary);
     if (!infile)
     {
          std::cout << "Wave::file error: "<< std::endl;
@@ -219,17 +232,34 @@ void FrmMain::on_playback_button_clicked()
     infile.read (testBuffer,length);  // read entire file
 
     infile.close();
-    int testDataIndex = findDataIndex(length, testBuffer);
+    int testDataIndex = audioCtrl->FindDataIndex(length, testBuffer);
 
 	FILE * pFile1;
-	pFile1 = fopen ("test_data.txt","w");
+	pFile1 = fopen ("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/test_data_lil_E.txt","w");
 
-	for (int j = testDataIndex; j < length; j++)
+	int32_t sample;
+
+	int16_t sample1;
+
+	int16_t bs;
+	char byte1;
+	char byte2;
+	uint32_t val;
+	for (int j = testDataIndex; j < length; j+=2)
 	{
-		fprintf(pFile1, "%d   ", testBuffer[j]);
+		sample = 0;
+		bs = 0;
+
+		byte1 = testBuffer[j];
+		byte2 = testBuffer[j+1];
+
+		bs = byte2 << 8;
+		bs |= (byte1 & 0xFF);
+
+		fprintf(pFile1, "%d", bs);
 		fprintf(pFile1, "\n");
 	}
-	*/
+
 
 }
 

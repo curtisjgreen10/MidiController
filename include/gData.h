@@ -21,6 +21,7 @@ namespace MidiGlobalData
 	extern double cymbal3vol;	/*!< current volume of cymbal 3 */
 	extern double cymbal4vol;	/*!< current volume of cymbal 4 */
 	extern double drum1hitTime;	/*!< time of drum 1 button press */
+	extern bool recording; /*!< true if software is recording */
 }
 
 #endif /* INCLUDE_MIDIGLOBALDATA_H_ */

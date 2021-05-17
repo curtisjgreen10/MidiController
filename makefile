@@ -17,8 +17,8 @@ _BDIR   = bin#                                 # Path to directory of binary fil
 _SSUF   = cpp#                                 # Suffix of source files
 _HSUF   = h#                                   # Suffix of header files
 _CC     = g++#                                 # Compiler to be used
-_CFLAGS = -Wall -Wextra -pedantic `pkg-config --cflags gtkmm-3.0` -g#             # Compilation flags
-_LDFLAGS= `pkg-config --libs gtkmm-3.0` -g#
+_CFLAGS = -Wall -Wextra -pedantic `C:/msys64/mingw64/bin/pkg-config --cflags gtkmm-3.0` -g#             # Compilation flags
+_LDFLAGS= `C:/msys64/mingw64/bin/pkg-config --libs gtkmm-3.0` -g#
 _SCRIPT = :#                                   # Any shell script to run before build (replace ':')
 
 SHELL   = /bin/bash#                           # Shell to be used by makefile
