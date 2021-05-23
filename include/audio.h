@@ -11,7 +11,7 @@
 #include "firFilter.h"
 #include "waveCapture.h"
 
-#define SAMPLING_RATE 48000
+#define SAMPLING_RATE 44100
 
 
 
@@ -47,6 +47,7 @@ private:
 
 	char* wavBufferChar;	/*!< buffer to hold raw voice data in char format */
 	char* wavBufferCharTotal;	/*!< buffer to hold raw voice data in char format */
+	char* wavBufferCharTotal_test;	/*!< buffer to hold raw voice data in char format */
 	double* wavBufferDouble;	/*!< buffer to hold voice data in double format */
 	double* wavBufferDoubleOutput;	/*!< buffer to hold voice data in double format */
 	char* preRecWavBuffer;	/*!< buffer to hold pre-recorded wav data */
