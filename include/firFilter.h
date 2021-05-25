@@ -7,8 +7,14 @@
 #ifndef INCLUDE_FIRFILTER_H_
 #define INCLUDE_FIRFILTER_H_
 #include <stdint.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
+#include <gmp.h>
+#include <gmpxx.h>
 
-#define FIR_FILTER_LENGTH 65
+#define FIR_FILTER_LENGTH 513
 
 typedef struct
 {
@@ -22,6 +28,7 @@ class FirFilter
 
 private:
 
+	void InitializeCoeffs();
 
 public:
 	//! \brief TBD.

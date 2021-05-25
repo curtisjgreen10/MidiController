@@ -9,6 +9,7 @@
 #include <tgmath.h>
 #include <iostream>
 #include <cmath>
+#include <algorithm>
 
 /*
 bool Audio::getIsRecording()
@@ -49,13 +50,27 @@ void Audio::StartVoiceRecorder(long sec)
 	// update SaveVoiceData to use wavBufferDouble or output to incorporate filtering
 
 
-	wavBufferDoubleOutput = new double[seconds*bufferLength];
+	wavBufferDoubleOutput = new double[bufferLength];
 
 	if (fType == FIR)
 	{
-		for (int i = 0; i < bufferLength*seconds; i++)
+		for (int i = 0; i < bufferLength; i++)
 		{
+			/*
+
+			if (i  == 6000)
+			{
+				wavBufferDoubleOutput[i] = firFilt->FirFilterUpdate(&firDat, wavBufferDouble[i]);
+			}
+			else
+			{
+				wavBufferDoubleOutput[i] = firFilt->FirFilterUpdate(&firDat, wavBufferDouble[i]);
+
+			}
+			*/
+
 			wavBufferDoubleOutput[i] = firFilt->FirFilterUpdate(&firDat, wavBufferDouble[i]);
+			//wavBufferDoubleOutput[i] = wavBufferDouble[i];
 		}
 	}
 	else if (fType == IIR)
@@ -65,23 +80,21 @@ void Audio::StartVoiceRecorder(long sec)
 
 
 	// un-normalize data
-	NormalizeData(wavBufferDoubleOutput, seconds*bufferLength, 0, false);
+	NormalizeData(wavBufferDoubleOutput, bufferLength, 0, false);
 
 	SaveVoiceData(pwc);
 }
 
 DWORD Audio::RecordVoiceData(waveCapture *wav)
 {
-	bufferLength = wav->getSuggestedBufferSize();
+	//bufferLength = wav->getSuggestedBufferSize();
 	if(wav->start(0) == 0)
 	{
 
-		wavBufferChar = new char[bufferLength];
-		wavBufferCharTotal = new char[bufferLength*seconds];
-		wavBufferCharTotal_test = new char[bufferLength*seconds];
-		wavBufferDouble = new double[bufferLength*seconds];
+		//wavBufferChar = new char[bufferLength];
 
-	    std::ifstream infile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/total_signal_unfiltered.wav", std::ios::binary);
+
+	    std::ifstream infile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/total_signal_unfiltered.wav", std::ios::binary);
 	    if (!infile)
 	    {
 	         std::cout << "Wave::file error: "<< std::endl;
@@ -90,16 +103,17 @@ DWORD Audio::RecordVoiceData(waveCapture *wav)
 	    infile.seekg (0, std::ios::end);   // get length of file
 	    int length = infile.tellg();
 	    infile.seekg (0, std::ios::beg);   // position to start of file
-	    infile.read (wavBufferCharTotal_test,length);  // read entire file
+	    bufferLength = length;
+		wavBufferCharTotal = new char[bufferLength];
+		//int16_t * wavBuffer16Total = new int16_t[bufferLength];
+		wavBufferCharTotal_test = new char[bufferLength];
+		wavBufferDouble = new double[bufferLength];
+	    infile.read (wavBufferCharTotal,length);  // read entire file
+	    int testDataIndex = FindDataIndex(length, wavBufferCharTotal);
 
-	    int testDataIndex = FindDataIndex(length, wavBufferCharTotal_test);
 
 		wav->createWAVEFile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/total_signal_filtered_FIR_C.wav");
 
-		int idx = 0;
-		char byte1;
-		char byte2;
-		int16_t sample = 0;
 
 		/*
 		for (int i = 0; i < seconds; i++)
@@ -113,7 +127,13 @@ DWORD Audio::RecordVoiceData(waveCapture *wav)
 		}
 		*/
 
-		for (int i = 0; i < bufferLength*seconds; i+=2)
+
+
+		int idx = 0;
+		char byte1;
+		char byte2;
+		int16_t sample = 0;
+		for (int i = 40; i < bufferLength; i+=2)
 		{
 			// convert to byte data to 16 bit little endian
 			sample = 0;
@@ -127,7 +147,11 @@ DWORD Audio::RecordVoiceData(waveCapture *wav)
 			idx++;
 		}
 
-		NormalizeData(wavBufferDouble, seconds*bufferLength, 4, true);
+		//std::cout << "The smallest element is " << *std::min_element(wavBuffer16Total, wavBuffer16Total + bufferLength) << '\n';
+		//std::cout << "The largest element is "  << *std::max_element(wavBuffer16Total, wavBuffer16Total + bufferLength) << '\n';
+
+		NormalizeData(wavBufferDouble, bufferLength, 4, true);
+
 		return bufferLength;
 	}
 	else
@@ -146,27 +170,26 @@ void Audio::SaveVoiceData(waveCapture *wav)
 	double temp1 = 0;
 	int16_t sample = 0;
 	int idx = 0;
-	FILE * pFile1;
-	pFile1 = fopen ("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/post_data.txt","w");
 
-	for (int j = 0; j < bufferLength*seconds; j+=2)
+
+	for (int j = 40; j < bufferLength; j+=2)
 	{
 		// cast back to 16-bit data
 		sample = (int16_t)wavBufferDoubleOutput[idx];
 		// convert 16-bit data back to 8-bit.
 		byte1 = (sample & 0xFF);
-		fprintf(pFile1, "%d", byte1);
-		fprintf(pFile1, "\n");
-
 		byte2 = ((sample >> 8) & 0xFF);
-		fprintf(pFile1, "%d", byte2);
-		fprintf(pFile1, "\n");
-
 		wavBufferCharTotal[j] = byte1;
 		wavBufferCharTotal[j+1] = byte2;
 		idx++;
 	}
 
+	wav->saveWAVEChunk(wavBufferCharTotal, bufferLength);
+
+
+	/*
+	bufferLength = wav->getSuggestedBufferSize();
+	wavBufferChar = new char[bufferLength];
 	for (int i = 0; i < seconds; i++)
 	{
 		for (int j = 0; j < bufferLength; j++)
@@ -175,6 +198,7 @@ void Audio::SaveVoiceData(waveCapture *wav)
 		}
 		wav->saveWAVEChunk(wavBufferChar, bufferLength);
 	}
+*/
 
 
 
@@ -182,9 +206,9 @@ void Audio::SaveVoiceData(waveCapture *wav)
 	//outfile.write(wavBufferChar, bufferLength);
 	//outfile.close();
 
-	wav->stop();
+	//wav->stop();
 	wav->closeWAVEFile();
-
+/*
 	char* wavBufferChar_test = new char[bufferLength];
 
 	wav->createWAVEFile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/test_unfiltered.wav");
@@ -199,7 +223,7 @@ void Audio::SaveVoiceData(waveCapture *wav)
 
 	wav->stop();
 	wav->closeWAVEFile();
-
+*/
 	printf("wave file closed\n");
 
 	// clean-up the heap
@@ -211,17 +235,16 @@ void Audio::SaveVoiceData(waveCapture *wav)
 
 void Audio::NormalizeData(double * data, int dataLen, int p, bool normalize)
 {
+	double temp;
 	double sum = 0;
-
 	if (normalize)
 	{
-		double* tempBuf = new double[dataLen];
-
 		for (int i = 0; i < dataLen; i++)
 		{
-			tempBuf[i] = abs(data[i]);
-			tempBuf[i] = pow(tempBuf[i],(double)p);
-			sum += tempBuf[i];
+			temp = 0;
+			temp = abs(data[i]);
+			temp = pow(temp,(double)p);
+			sum += temp;
 		}
 
 		normalizeFactor = pow(sum,1.0/(double)p);
