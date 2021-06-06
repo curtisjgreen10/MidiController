@@ -7,6 +7,7 @@
 #include <thread>
 #include <mutex>
 #include "gData.h"
+#include "mixqueue.h"
 
 
 using namespace Gtk;
@@ -16,15 +17,15 @@ using namespace Gtk;
 FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade) :
     Gtk::Window(cobject), builder(refGlade){
 
-	builder->get_widget("btnDrum1", btnCymbal1);
-	builder->get_widget("btnDrum2", btnCymbal2);
-	builder->get_widget("btnDrum3", btnCymbal3);
-	builder->get_widget("btnDrum4", btnCymbal4);
+	builder->get_widget("btnCymbal1", btnCymbal1);
+	builder->get_widget("btnCymbal2", btnCymbal2);
+	builder->get_widget("btnCymbal3", btnCymbal3);
+	builder->get_widget("btnCymbal4", btnCymbal4);
 
-	builder->get_widget("btnVolDrum1", btnVolCymbal1);
-	builder->get_widget("btnVolDrum2", btnVolCymbal2);
-	builder->get_widget("btnVolDrum3", btnVolCymbal3);
-	builder->get_widget("btnVolDrum4", btnVolCymbal4);
+	builder->get_widget("btnVolCymbal1", btnVolCymbal1);
+	builder->get_widget("btnVolCymbal2", btnVolCymbal2);
+	builder->get_widget("btnVolCymbal3", btnVolCymbal3);
+	builder->get_widget("btnVolCymbal4", btnVolCymbal4);
 
 	builder->get_widget("btnDrum1", btnDrum1);
 	builder->get_widget("btnDrum2", btnDrum2);
@@ -47,20 +48,20 @@ FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refG
 	btnPlayback->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_playback_button_clicked));
 	btnStopPlayback->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_stop_playback_button_clicked));
 
-	btnDrum1->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_drum_x_button_clicked), 1));
-	btnDrum2->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_drum_x_button_clicked), 2));
-	btnDrum3->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_drum_x_button_clicked), 3));
-	btnDrum4->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_drum_x_button_clicked), 4));
+	btnDrum1->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_drum_1_button_clicked));
+	btnDrum2->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_drum_2_button_clicked));
+	btnDrum3->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_drum_3_button_clicked));
+	btnDrum4->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_drum_4_button_clicked));
 
 	btnVolDrum1->signal_value_changed().connect(sigc::mem_fun(*this, &FrmMain::on_btnVolDrum_1_value_changed));
 	btnVolDrum2->signal_value_changed().connect(sigc::mem_fun(*this, &FrmMain::on_btnVolDrum_2_value_changed));
 	btnVolDrum3->signal_value_changed().connect(sigc::mem_fun(*this, &FrmMain::on_btnVolDrum_3_value_changed));
 	btnVolDrum4->signal_value_changed().connect(sigc::mem_fun(*this, &FrmMain::on_btnVolDrum_4_value_changed));
 
-	btnCymbal1->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_cymbal_x_button_clicked), 1));
-	btnCymbal2->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_cymbal_x_button_clicked), 2));
-	btnCymbal3->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_cymbal_x_button_clicked), 3));
-	btnCymbal4->signal_clicked().connect(sigc::bind(sigc::mem_fun(*this, &FrmMain::on_cymbal_x_button_clicked), 4));
+	btnCymbal1->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_cymbal_1_button_clicked));
+	btnCymbal2->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_cymbal_2_button_clicked));
+	btnCymbal3->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_cymbal_3_button_clicked));
+	btnCymbal4->signal_clicked().connect(sigc::mem_fun(*this, &FrmMain::on_cymbal_4_button_clicked));
 
 	btnVolCymbal1->signal_value_changed().connect(sigc::mem_fun(*this, &FrmMain::on_btnVolCymbal_1_value_changed));
 	btnVolCymbal2->signal_value_changed().connect(sigc::mem_fun(*this, &FrmMain::on_btnVolCymbal_2_value_changed));
@@ -73,7 +74,7 @@ FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refG
 void FrmMain::startRecorder(Audio* audio)
 {
 	printf("record thread started\n");
-	audio->DigitalFilterInit(FIR);
+	audio->DigitalFilterInit(IIR);
 	audio->StartVoiceRecorder(audio->seconds);
 }
 
@@ -81,31 +82,53 @@ void FrmMain::cleanUpHeap(Audio* audio, Timer * timer)
 {
 	printf("clean up thread started\n");
 	while(MidiGlobalData::recording == true);
-	delete timer;
-	delete audio;
+	//delete timer;
+	//delete audio;
 }
 
-void FrmMain::on_drum_x_button_clicked(int data)
+void FrmMain::on_drum_1_button_clicked()
+{
+	// always play back sound - add to queue if recording
+	PlaySound(TEXT("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/Closed-Hi-Hat-2.wav"), NULL, SND_FILENAME | SND_ASYNC);
+	if(MidiGlobalData::recording)
+	{
+		MusicData item;
+		item.file = DRUM_1;
+		item.msec = timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+	}
+}
+
+void FrmMain::on_drum_2_button_clicked()
 {
 	if(MidiGlobalData::recording)
 	{
-		switch(data)
-		{
-			case 1:
-				audioCtrl->ReadPreRecordedWavData(DRUM_1, timer->GetElapsedTimeMilliSeconds());
-				break;
-			case 2:
-				printf("Drum 2\n");
-				break;
-			case 3:
-				printf("Drum 3\n");
-				break;
-			case 4:
-				printf("Drum 4\n");
-				break;
-			default:
-				break;
-		}
+		MusicData item;
+		item.file = DRUM_2;
+		item.msec = timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+	}
+}
+
+void FrmMain::on_drum_3_button_clicked()
+{
+	if(MidiGlobalData::recording)
+	{
+		MusicData item;
+		item.file = DRUM_3;
+		item.msec = timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+	}
+}
+
+void FrmMain::on_drum_4_button_clicked()
+{
+	if(MidiGlobalData::recording)
+	{
+		MusicData item;
+		item.file = DRUM_4;
+		item.msec = timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
 	}
 }
 
@@ -133,27 +156,47 @@ void FrmMain::on_btnVolDrum_4_value_changed(int data)
 	MidiGlobalData::drum4vol = btnVolDrum4->get_value();
 }
 
-void FrmMain::on_cymbal_x_button_clicked(int data)
+void FrmMain::on_cymbal_1_button_clicked()
 {
 	if(MidiGlobalData::recording)
 	{
-		switch(data)
-		{
-			case 1:
-				audioCtrl->ReadPreRecordedWavData(DRUM_1, timer->GetElapsedTimeMilliSeconds());
-				break;
-			case 2:
-				printf("Drum 2\n");
-				break;
-			case 3:
-				printf("Drum 3\n");
-				break;
-			case 4:
-				printf("Drum 4\n");
-				break;
-			default:
-				break;
-		}
+		MusicData item;
+		item.file = CYMBAL_1;
+		item.msec = timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+	}
+}
+
+void FrmMain::on_cymbal_2_button_clicked()
+{
+	if(MidiGlobalData::recording)
+	{
+		MusicData item;
+		item.file = CYMBAL_2;
+		item.msec = timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+	}
+}
+
+void FrmMain::on_cymbal_3_button_clicked()
+{
+	if(MidiGlobalData::recording)
+	{
+		MusicData item;
+		item.file = CYMBAL_3;
+		item.msec = timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+	}
+}
+
+void FrmMain::on_cymbal_4_button_clicked()
+{
+	if(MidiGlobalData::recording)
+	{
+		MusicData item;
+		item.file = CYMBAL_4;
+		item.msec = timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
 	}
 }
 
@@ -184,7 +227,7 @@ void FrmMain::on_btnVolCymbal_4_value_changed(int data)
 void FrmMain::on_record_button_clicked()
 {
 	MidiGlobalData::recording = true;
-
+	MidiGlobalData::queue = new MixQueue(1000);
     timer = new Timer();
     audioCtrl = new Audio();
 

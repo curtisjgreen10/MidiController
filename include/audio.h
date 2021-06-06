@@ -25,7 +25,8 @@ typedef enum FilterType
 //! Enum used for pre-recorded wav files.
 typedef enum WavFile
 {
-	DRUM_1 = 0,
+	NONE = 0,
+	DRUM_1,
 	DRUM_2,
 	DRUM_3,
 	DRUM_4,
@@ -43,14 +44,17 @@ private:
 	int dataIndex;
 
 	DWORD bufferLength = 0;	/*!< buffer length of wavBufferChar */
+	DWORD bufferLengthPreRec = 0;	/*!< buffer length of wavBufferChar */
 	bool preRecBuffInit = false; /*!< true if space has already been allocated reading pre-recorded wav files */
 
 	char* wavBufferChar;	/*!< buffer to hold raw voice data in char format */
+	int16_t* wavBuffer16bitMixed;	/*!< buffer to hold raw voice data in char format */
 	char* wavBufferCharTotal;	/*!< buffer to hold raw voice data in char format */
 	char* wavBufferCharTotal_test;	/*!< buffer to hold raw voice data in char format */
 	double* wavBufferDouble;	/*!< buffer to hold voice data in double format */
 	double* wavBufferDoubleOutput;	/*!< buffer to hold voice data in double format */
 	char* preRecWavBuffer;	/*!< buffer to hold pre-recorded wav data */
+	int16_t* preRecWavBuffer16bit;	/*!< buffer to hold pre-recorded wav data */
 	char* totalPreRecWavBuffer;	/*!< buffer to hold total pre-recorded wav data */
 	double normalizeFactor;
 
@@ -115,12 +119,14 @@ public:
 	//! \brief Read pre-recorded wav files after button presses.
 	//!
 	//! @param wav		The pre-recorded wav file to read from disk.
-	void ReadPreRecordedWavData(WavFile wav, double time);
+	void ReadPreRecordedWavData(WavFile wav);
 
 	//! \brief Read pre-recorded wav files after button presses.
 	//!
 	//! @param sec		The number of seconds to record for (user specified).
 	void StartVoiceRecorder(long sec);
+
+	void MixAudio(waveCapture *wav);
 
 };
 

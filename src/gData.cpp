@@ -20,4 +20,5 @@ namespace MidiGlobalData
 	double cymbal4vol;
 	double drum1hitTime;
 	bool recording = false;
+	MixQueue* queue;
 }

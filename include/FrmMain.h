@@ -1,6 +1,7 @@
 #include <gtkmm.h>
 #include "audio.h"
 #include "timer.h"
+#include "mixqueue.h"
 
 class FrmMain : public Gtk::Window{
 protected:
@@ -41,14 +42,20 @@ protected:
     void on_entry_activated();
 
     //drum controls signal handlers
-    void on_drum_x_button_clicked(int data);
+    void on_drum_1_button_clicked();
+    void on_drum_2_button_clicked();
+    void on_drum_3_button_clicked();
+    void on_drum_4_button_clicked();
     void on_btnVolDrum_1_value_changed(int data);
     void on_btnVolDrum_2_value_changed(int data);
     void on_btnVolDrum_3_value_changed(int data);
     void on_btnVolDrum_4_value_changed(int data);
 
     //cymbal controls signal handlers
-    void on_cymbal_x_button_clicked(int data);
+    void on_cymbal_1_button_clicked();
+    void on_cymbal_2_button_clicked();
+    void on_cymbal_3_button_clicked();
+    void on_cymbal_4_button_clicked();
     void on_btnVolCymbal_1_value_changed(int data);
     void on_btnVolCymbal_2_value_changed(int data);
     void on_btnVolCymbal_3_value_changed(int data);

@@ -58,17 +58,7 @@ void IirFilter::RunIIRBiquadForm1(IirData *iir, double *Input, double *Output, i
 		{
 			y = SectCalcForm1(iir, k, y);
 		}
-
-
-		if (Input[j] == 0)
-		{
-			Output[j] = 0;
-		}
-		else
-		{
-			Output[j] = y;
-		}
-
+		Output[j] = y;
 	}
 }
 

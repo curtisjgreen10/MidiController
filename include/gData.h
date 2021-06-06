@@ -8,6 +8,8 @@
 #ifndef INCLUDE_MIDIGLOBALDATA_H_
 #define INCLUDE_MIDIGLOBALDATA_H_
 
+#include "mixqueue.h"
+
 namespace MidiGlobalData
 {
 	extern bool micInput;		/*!< true if mic is to be routed to output */
@@ -22,6 +24,7 @@ namespace MidiGlobalData
 	extern double cymbal4vol;	/*!< current volume of cymbal 4 */
 	extern double drum1hitTime;	/*!< time of drum 1 button press */
 	extern bool recording; /*!< true if software is recording */
+	extern MixQueue* queue;
 }
 
 #endif /* INCLUDE_MIDIGLOBALDATA_H_ */
