@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <iostream>
 #include <gmp.h>
-#include <gmpxx.h>
+
 
 #define FIR_FILTER_LENGTH 513
 
@@ -27,8 +27,6 @@ class FirFilter
 {
 
 private:
-
-	void InitializeCoeffs();
 
 public:
 	//! \brief TBD.

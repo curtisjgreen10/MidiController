@@ -12,17 +12,20 @@
 #include <cmath>
 #include <algorithm>
 
-/*
-bool Audio::getIsRecording()
+#define TONE_TEST 0
+#define FILTER_TIMER_TEST 0
+
+
+long Audio::getSecondsToRecord()
 {
-	return recording;
+	return seconds;
 }
 
-void Audio::setIsRecording(bool rec)
+void Audio::setSecondsToRecord(long sec)
 {
-	recording = rec;
+	seconds = sec;
 }
-*/
+
 
 void Audio::DigitalFilterInit(FilterType filt)
 {
@@ -40,33 +43,59 @@ void Audio::DigitalFilterInit(FilterType filt)
 	}
 }
 
-void Audio::StartVoiceRecorder(long sec)
+void Audio::StartVoiceRecorder()
 {
-	seconds = sec;
+	seconds = getSecondsToRecord();
 	pwc = new waveCapture(SAMPLING_RATE, 16, 1);
 
 	RecordVoiceData(pwc);
+
+	// normalize data
+	NormalizeData(wavBufferDouble, bufferLength, 4, true);
 
 	wavBufferDoubleOutput = new double[bufferLength];
 
 	if (fType == FIR)
 	{
+#if FILTER_TIMER_TEST
+		float time1, time2;
+
+		time1 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		printf("time 1: %f\n", time1);
+#endif
 		for (int i = 0; i < bufferLength; i++)
 		{
 			wavBufferDoubleOutput[i] = firFilt->FirFilterUpdate(&firDat, wavBufferDouble[i]);
 		}
+#if FILTER_TIMER_TEST
+		time2 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		printf("time 2: %f\n", time2);
+
+		printf("FIR filter time: %f\n", (time2 - time1));
+#endif
 	}
 	else if (fType == IIR)
 	{
-		iirFilt->RunIIRBiquadForm2(&iirDat, wavBufferDouble, wavBufferDoubleOutput, bufferLength);
-	}
+#if FILTER_TIMER_TEST
+		float time1, time2;
 
+		time1 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		printf("time 1: %f\n", time1);
+#endif
+		iirFilt->RunIIRFilter(&iirDat, wavBufferDouble, wavBufferDoubleOutput, bufferLength);
+#if FILTER_TIMER_TEST
+		time2 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		printf("time 2: %f\n", time2);
+
+		printf("IIR filter time: %f\n", (time2 - time1));
+#endif
+	}
 
 	// un-normalize data
 	NormalizeData(wavBufferDoubleOutput, bufferLength, 0, false);
 
+	// save filtered voice data
 	SaveVoiceData(pwc);
-
 }
 
 DWORD Audio::RecordVoiceData(waveCapture *wav)
@@ -85,9 +114,7 @@ DWORD Audio::RecordVoiceData(waveCapture *wav)
 	    int length = infile.tellg();
 	    infile.seekg (0, std::ios::beg);   // position to start of file
 	    bufferLength = length;
-		wavBufferCharTotal_test = new char[bufferLength];
 	    infile.read (wavBufferCharTotal,length);  // read entire file
-	    int testDataIndex = FindDataIndex(length, wavBufferCharTotal);
 	    wavBufferDouble = new double[bufferLength];
 	    wavBufferCharTotal = new char[bufferLength];
 	    wav->createWAVEFile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/total_signal_filtered_IIRC.wav");
@@ -128,7 +155,7 @@ DWORD Audio::RecordVoiceData(waveCapture *wav)
 			wavBufferDouble[idx] = (double)ceil(sample);
 			idx++;
 		}
-		NormalizeData(wavBufferDouble, bufferLength, 4, true);
+
 		return bufferLength;
 	}
 	else
@@ -165,8 +192,9 @@ void Audio::SaveVoiceData(waveCapture *wav)
 	}
 
 
-
+#if TONE_TEST != 1
 	MixAudio(wav);
+#endif
 
 #if TONE_TEST
 	wav->saveWAVEChunk(wavBufferCharTotal, bufferLength);
@@ -201,18 +229,15 @@ void Audio::MixAudio(waveCapture *wav)
 	int16_t sample = 0;
 	MusicData item;
 
-	if (MidiGlobalData::queue->isEmpty(MidiGlobalData::queue))
+	if (MidiGlobalData::queue->isEmpty())
 	{
 		// no buttons pushed during recording, no mixed required
 		return;
 	}
 
 	wavBuffer16bitMixed = new int16_t[bufferLength];
-#if TONE_TEST
-	for (int i = 40; i < bufferLength; i+=2)
-#else
+
 	for (int i = 0; i < bufferLength; i+=2)
-#endif
 	{
 		// convert to byte data to 16 bit little endian
 		sample = 0;
@@ -228,9 +253,9 @@ void Audio::MixAudio(waveCapture *wav)
 	float sec = 0;
 	int eventSample = 0;
 	preRecWavBuffer16bit = new int16_t[bufferLength];
-	for (int i = 0; i < MidiGlobalData::queue->size_; i++)
+	for (int i = 0; i < MidiGlobalData::queue->getQueueSize(); i++)
 	{
-		item = MidiGlobalData::queue->dequeue(MidiGlobalData::queue);
+		item = MidiGlobalData::queue->dequeue();
 		sec = item.msec / 1000.0; //convert to seconds
 		eventSample = sec * SAMPLING_RATE; // get the sample at which the button press occured
 		ReadPreRecordedWavData(item.file);
@@ -248,21 +273,14 @@ void Audio::MixAudio(waveCapture *wav)
 			idx++;
 		}
 
-#if TONE_TEST
-		for (int i = 40; i < bufferLength; i+=2)
-#else
 		for (int i = 0; i < bufferLength; i+=2)
-#endif
 		{
 			wavBuffer16bitMixed[i] = (wavBuffer16bitMixed[i] + preRecWavBuffer16bit[i]) / 2;
 		}
 
 		idx = 0;
-#if TONE_TEST
-		for (int j = 40; j < bufferLength; j+=2)
-#else
+
 		for (int j = 0; j < bufferLength; j+=2)
-#endif
 		{
 			// cast back to 16-bit data
 			sample = wavBuffer16bitMixed[idx];
@@ -273,8 +291,6 @@ void Audio::MixAudio(waveCapture *wav)
 			wavBufferCharTotal[j+1] = byte2;
 			idx++;
 		}
-
-		//wav->saveWAVEChunk(wavBufferCharTotal, bufferLength);
 	}
 }
 

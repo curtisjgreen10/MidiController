@@ -17,70 +17,77 @@ MixQueue::MixQueue(int capacity)
     array_ = new MusicData[capacity_];
 }
 
-bool MixQueue::isFull(MixQueue* queue)
+bool MixQueue::isFull()
 {
-    return (queue->size_ == queue->capacity_);
+    return (size_ == capacity_);
 }
 
-bool MixQueue::isEmpty(MixQueue* queue)
+bool MixQueue::isEmpty()
 {
-    return (queue->size_ == 0);
+    return (size_ == 0);
 }
 
-void MixQueue::enqueue(MixQueue* queue, MusicData item)
+void MixQueue::enqueue(MusicData item)
 {
-    if (isFull(queue))
+    if (isFull())
     {
         return;
     }
-    queue->rear_ = (queue->rear_ + 1) % queue->capacity_;
-    queue->array_[queue->rear_] = item;
-    queue->size_ = queue->size_ + 1;
+    rear_ = (rear_ + 1) % capacity_;
+    array_[rear_] = item;
+    size_ = size_ + 1;
 }
 
-MusicData MixQueue::dequeue(MixQueue* queue)
+MusicData MixQueue::dequeue()
 {
 	MusicData item;
 	item.file = NONE;
 	item.msec = 0;
 
-    if (isEmpty(queue))
+    if (isEmpty())
     {
         return item;
     }
 
-    item = queue->array_[queue->front_];
-    queue->front_ = (queue->front_ + 1) % queue->capacity_;
-    queue->size_ = queue->size_ - 1;
+    item = array_[front_];
+    front_ = (front_ + 1) % capacity_;
+    size_ = size_ - 1;
     return item;
 }
 
-MusicData MixQueue::front(MixQueue* queue)
+int MixQueue::getQueueSize()
+{
+	return size_;
+}
+
+#if DEAD_CODE
+MusicData MixQueue::front()
 {
 	MusicData item;
 	item.file = NONE;
 	item.msec = 0;
 
-    if (isEmpty(queue))
+    if (isEmpty())
     {
         return item;
     }
 
-    item = queue->array_[queue->front_];
+    item = array_[front_];
     return item;
 }
 
-MusicData MixQueue::rear(MixQueue* queue)
+MusicData MixQueue::rear()
 {
 	MusicData item;
 	item.file = NONE;
 	item.msec = 0;
 
-    if (isEmpty(queue))
+    if (isEmpty())
     {
         return item;
     }
 
-    item = queue->array_[queue->rear_];
+    item = array_[rear_];
     return item;
 }
+#endif

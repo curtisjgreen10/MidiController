@@ -21,4 +21,6 @@ namespace MidiGlobalData
 	double drum1hitTime;
 	bool recording = false;
 	MixQueue* queue;
+	Timer *timer;
+	Audio *audioCtrl;
 }

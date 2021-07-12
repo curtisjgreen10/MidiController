@@ -27,8 +27,8 @@ protected:
     Gtk::VolumeButton *btnVolCymbal4;
     Gtk::Entry *txtSeconds;
 
-    Timer *timer;
-    Audio *audioCtrl;
+
+
 
 public:
 

@@ -1,5 +1,4 @@
 #include "FrmMain.h"
-#include "micInput.h"
 #include <iostream>
 #include <stdio.h>
 #include <mmsystem.h>
@@ -8,6 +7,7 @@
 #include <mutex>
 #include "gData.h"
 #include "mixqueue.h"
+#include <future>
 
 
 using namespace Gtk;
@@ -74,8 +74,17 @@ FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refG
 void FrmMain::startRecorder(Audio* audio)
 {
 	printf("record thread started\n");
+	float time1, time2;
+	time1 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+	printf("time 1: %f\n", time1);
+	MidiGlobalData::recording = true;
 	audio->DigitalFilterInit(IIR);
-	audio->StartVoiceRecorder(audio->seconds);
+	audio->StartVoiceRecorder();
+	MidiGlobalData::recording = false;
+	time2 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+	printf("time 2: %f\n", time2);
+
+	printf("thread time: %f\n", (time2 - time1));
 }
 
 void FrmMain::cleanUpHeap(Audio* audio, Timer * timer)
@@ -94,8 +103,8 @@ void FrmMain::on_drum_1_button_clicked()
 	{
 		MusicData item;
 		item.file = DRUM_1;
-		item.msec = timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(item);
 	}
 }
 
@@ -105,8 +114,8 @@ void FrmMain::on_drum_2_button_clicked()
 	{
 		MusicData item;
 		item.file = DRUM_2;
-		item.msec = timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(item);
 	}
 }
 
@@ -116,8 +125,8 @@ void FrmMain::on_drum_3_button_clicked()
 	{
 		MusicData item;
 		item.file = DRUM_3;
-		item.msec = timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(item);
 	}
 }
 
@@ -127,8 +136,8 @@ void FrmMain::on_drum_4_button_clicked()
 	{
 		MusicData item;
 		item.file = DRUM_4;
-		item.msec = timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(item);
 	}
 }
 
@@ -162,8 +171,8 @@ void FrmMain::on_cymbal_1_button_clicked()
 	{
 		MusicData item;
 		item.file = CYMBAL_1;
-		item.msec = timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(item);
 	}
 }
 
@@ -173,8 +182,8 @@ void FrmMain::on_cymbal_2_button_clicked()
 	{
 		MusicData item;
 		item.file = CYMBAL_2;
-		item.msec = timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(item);
 	}
 }
 
@@ -184,8 +193,8 @@ void FrmMain::on_cymbal_3_button_clicked()
 	{
 		MusicData item;
 		item.file = CYMBAL_3;
-		item.msec = timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(item);
 	}
 }
 
@@ -195,8 +204,8 @@ void FrmMain::on_cymbal_4_button_clicked()
 	{
 		MusicData item;
 		item.file = CYMBAL_4;
-		item.msec = timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(MidiGlobalData::queue, item);
+		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+		MidiGlobalData::queue->enqueue(item);
 	}
 }
 
@@ -226,30 +235,25 @@ void FrmMain::on_btnVolCymbal_4_value_changed(int data)
 
 void FrmMain::on_record_button_clicked()
 {
-	MidiGlobalData::recording = true;
+
 	MidiGlobalData::queue = new MixQueue(1000);
-    timer = new Timer();
-    audioCtrl = new Audio();
+	MidiGlobalData::timer = new Timer();
+	MidiGlobalData::audioCtrl = new Audio();
 
 	printf("button clicked\n");
 
-	//long seconds = 0;
+	long seconds = 0;
 	Glib::ustring ustr = txtSeconds->get_text();
 	std::stringstream s;
 	s << ustr.raw();
-	s >> audioCtrl->seconds;
+	s >> seconds;
+	MidiGlobalData::audioCtrl->setSecondsToRecord(seconds);
 
-	timer->Start();
+	MidiGlobalData::timer->Start();
 
-	std::thread recorderThread(startRecorder, audioCtrl);
-
+	std::thread recorderThread(startRecorder, MidiGlobalData::audioCtrl);
 	recorderThread.detach();
 
-	/*
-	std::thread cleanupThread(cleanUpHeap, audioCtrl, timer);
-
-	cleanupThread.detach();
-	*/
 }
 
 unsigned __stdcall startPlayer (void* lpParam)
@@ -275,7 +279,7 @@ void FrmMain::on_playback_button_clicked()
     infile.read (testBuffer,length);  // read entire file
 
     infile.close();
-    int testDataIndex = audioCtrl->FindDataIndex(length, testBuffer);
+    int testDataIndex = MidiGlobalData::audioCtrl->FindDataIndex(length, testBuffer);
 
 	FILE * pFile1;
 	pFile1 = fopen ("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/test_data_lil_E.txt","w");
@@ -302,8 +306,6 @@ void FrmMain::on_playback_button_clicked()
 		fprintf(pFile1, "%d", bs);
 		fprintf(pFile1, "\n");
 	}
-
-
 }
 
 void FrmMain::on_stop_playback_button_clicked()

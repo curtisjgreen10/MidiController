@@ -64,7 +64,7 @@ private:
 	IirData iirDat;	/*!< fir filter data */
 	IirFilter *iirFilt;	/*!< iir filter class object pointer */
 	FilterType fType = FIR; /*!< initialized to fir and reset in init method */
-
+	long seconds = 0;	/*!< seconds recorded */
 
 
 	//! \brief Normalizes a buffer of data using p-norm to a range of -1.0 and 1.0.
@@ -91,8 +91,14 @@ private:
 	//! @param wav		Buffer length of new pre-recorded data.
 	void UpdateTotalPreRecordedWav(int bufferlen, double time);
 
+	void MixAudio(waveCapture *wav);
+
+	//! \brief Read pre-recorded wav files after button presses.
+	//!
+	//! @param wav		The pre-recorded wav file to read from disk.
+	void ReadPreRecordedWavData(WavFile wav);
+
 public:
-	long seconds = 0;	/*!< seconds recorded */
 
 	//! \brief Finds the index after header in a wav file where the data is located.
 	//!
@@ -104,12 +110,12 @@ public:
 	//! \brief Get whether or not the software is recording.
 	//!
 	//! @return True if recording, otherwise false.
-	bool getIsRecording();
+	long getSecondsToRecord();
 
 	//! \brief Set whether or not the software is recording.
 	//!
 	//! @return True if recording, false otherwise.
-	void setIsRecording(bool rec);
+	void setSecondsToRecord(long sec);
 
 	//! \brief Initialize the type of digital filter to be used for mic recording.
 	//!
@@ -118,15 +124,10 @@ public:
 
 	//! \brief Read pre-recorded wav files after button presses.
 	//!
-	//! @param wav		The pre-recorded wav file to read from disk.
-	void ReadPreRecordedWavData(WavFile wav);
-
-	//! \brief Read pre-recorded wav files after button presses.
-	//!
 	//! @param sec		The number of seconds to record for (user specified).
-	void StartVoiceRecorder(long sec);
+	void StartVoiceRecorder();
 
-	void MixAudio(waveCapture *wav);
+
 
 };
 

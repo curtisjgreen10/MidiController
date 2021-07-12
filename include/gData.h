@@ -9,6 +9,7 @@
 #define INCLUDE_MIDIGLOBALDATA_H_
 
 #include "mixqueue.h"
+#include "timer.h"
 
 namespace MidiGlobalData
 {
@@ -25,6 +26,8 @@ namespace MidiGlobalData
 	extern double drum1hitTime;	/*!< time of drum 1 button press */
 	extern bool recording; /*!< true if software is recording */
 	extern MixQueue* queue;
+	extern Timer *timer;
+	extern Audio *audioCtrl;
 }
 
 #endif /* INCLUDE_MIDIGLOBALDATA_H_ */

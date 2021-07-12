@@ -9,13 +9,13 @@
 
 void IirFilter::IirFilterInit(IirData *iir)
 {
-	iir->NumSections = 2;
+	iir->num = 2;
 
-	for(int i=0; i<REG_SIZE; i++) // Init the shift registers.
+	for(int i=0; i<FILTER_ORDER; i++)
 	{
-		iir->Reg0[i] = 0.0;
-		iir->Reg1[i] = 0.0;
-		iir->Reg2[i] = 0.0;
+		iir->regX[i] = 0.0;
+		iir->regY[i] = 0.0;
+		iir->regZ[i] = 0.0;
 	}
 
 
@@ -38,72 +38,29 @@ void IirFilter::IirFilterInit(IirData *iir)
 
 }
 
-void IirFilter::RunIIRBiquadForm1(IirData *iir, double *Input, double *Output, int NumSigPts)
+void IirFilter::RunIIRFilter(IirData *iir, double *BufferIn, double *BufferOut, int length)
 {
 	double y;
 	int j, k;
 
-	for(j=0; j<REG_SIZE; j++) // Init the shift registers.
+	for(j=0;j<length;j++)
 	{
-		iir->RegX1[j] = 0.0;
-		iir->RegX2[j] = 0.0;
-		iir->RegY1[j] = 0.0;
-		iir->RegY2[j] = 0.0;
-	}
+		iir->regX[0] = BufferIn[j] - iir->a1[0] * iir->regY[0] - iir->a2[0] * iir->regZ[0];
+		y = iir->b0[0] * iir->regX[0] + iir->b1[0] * iir->regY[0] + iir->b2[0] * iir->regZ[0];
 
-	for(j=0; j<NumSigPts; j++)
-	{
-		y = SectCalcForm1(iir, 0, Input[j]);
-		for(k=1; k<iir->NumSections; k++)
+		iir->regZ[0] = iir->regY[0];
+		iir->regY[0] = iir->regX[0];
+
+
+		for(k=1; k<(iir->num); k++)
 		{
-			y = SectCalcForm1(iir, k, y);
+			iir->regX[k] = BufferIn[j] - iir->a1[k] * iir->regY[k] - iir->a2[k] * iir->regZ[k];
+			y = iir->b0[k] * iir->regX[k] + iir->b1[k] * iir->regY[k] + iir->b2[k] * iir->regZ[k];
+
+			iir->regZ[k] = iir->regY[k];
+			iir->regY[k] = iir->regX[k];
 		}
-		Output[j] = y;
+		BufferOut[j] = y;
 	}
 }
 
-double IirFilter::SectCalcForm1(IirData *iir, int k, double x)
-{
-	double y, CenterTap;
-
-	CenterTap = x * iir->b0[k] + iir->b1[k] * iir->RegX1[k] + iir->b2[k] * iir->RegX2[k];
-	y = iir->a0[k] * CenterTap - iir->a1[k] * iir->RegY1[k] - iir->a2[k] * iir->RegY2[k];
-
-	iir->RegX2[k] = iir->RegX1[k];
-	iir->RegX1[k] = x;
-	iir->RegY2[k] = iir->RegY1[k];
-	iir->RegY1[k] = y;
-
-	return(y);
-}
-
-void IirFilter::RunIIRBiquadForm2(IirData *iir, double *Input, double *Output, int NumSigPts)
-{
-	double y;
-	int j, k;
-
-	for(j=0;j<NumSigPts;j++)
-	{
-		y = SectCalcForm2(iir, 0, Input[j]);
-
-		for(k=1; k<(iir->NumSections); k++)
-		{
-			y = SectCalcForm2(iir, k, y);
-		}
-		Output[j] = y;
-	}
-}
-
-double IirFilter::SectCalcForm2(IirData *iir, int k, double x)
-{
-	double y;
-
-	iir->Reg0[k] = x - iir->a1[k] * iir->Reg1[k] - iir->a2[k] * iir->Reg2[k];
-	y = iir->b0[k] * iir->Reg0[k] + iir->b1[k] * iir->Reg1[k] + iir->b2[k] * iir->Reg2[k];
-
-	// Shift the register values
-	iir->Reg2[k] = iir->Reg1[k];
-	iir->Reg1[k] = iir->Reg0[k];
-
-	return(y);
-}

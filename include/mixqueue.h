@@ -22,18 +22,20 @@ typedef struct
 class MixQueue {
 
 private:
-    int front_, rear_;
+    int front_, rear_, capacity_, size_;
     MusicData* array_;
 
 public:
-    int capacity_, size_;
     MixQueue(int capacity);
-    bool isFull(MixQueue* queue);
-    bool isEmpty(MixQueue* queue);
-    void enqueue(MixQueue* queue, MusicData item);
-    MusicData dequeue(MixQueue* queue);
-    MusicData front(MixQueue* queue);
-    MusicData rear(MixQueue* queue);
+    bool isFull();
+    bool isEmpty();
+    void enqueue(MusicData item);
+    MusicData dequeue();
+    int getQueueSize();
+#if DEAD_CODE
+    MusicData front();
+    MusicData rear();
+#endif
 };
 
 #endif /* INCLUDE_MIXQUEUE_H_ */
