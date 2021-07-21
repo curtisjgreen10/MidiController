@@ -42,8 +42,6 @@ class Audio
 private:
 
 	int dataIndex;
-
-	DWORD bufferLength = 0;	/*!< buffer length of wavBufferChar */
 	DWORD bufferLengthPreRec = 0;	/*!< buffer length of wavBufferChar */
 	bool preRecBuffInit = false; /*!< true if space has already been allocated reading pre-recorded wav files */
 
@@ -51,14 +49,12 @@ private:
 	int16_t* wavBuffer16bitMixed;	/*!< buffer to hold raw voice data in char format */
 	char* wavBufferCharTotal;	/*!< buffer to hold raw voice data in char format */
 	char* wavBufferCharTotal_test;	/*!< buffer to hold raw voice data in char format */
-	double* wavBufferDouble;	/*!< buffer to hold voice data in double format */
-	double* wavBufferDoubleOutput;	/*!< buffer to hold voice data in double format */
 	char* preRecWavBuffer;	/*!< buffer to hold pre-recorded wav data */
 	int16_t* preRecWavBuffer16bit;	/*!< buffer to hold pre-recorded wav data */
 	char* totalPreRecWavBuffer;	/*!< buffer to hold total pre-recorded wav data */
 	double normalizeFactor;
 
-	waveCapture *pwc;	/*!< wave capture object pointer */
+	waveCapture *waveRecordObj;	/*!< wave capture object pointer */
 	FirData firDat;	/*!< fir filter data */
 	FirFilter *firFilt;	/*!< fir filter class object pointer */
 	IirData iirDat;	/*!< fir filter data */
@@ -67,13 +63,7 @@ private:
 	long seconds = 0;	/*!< seconds recorded */
 
 
-	//! \brief Normalizes a buffer of data using p-norm to a range of -1.0 and 1.0.
-	//!
-	//! @param data		Data to normalize.
-	//! @param dataLen		Length of data buffer.
-	//! @param p		P value for p-norm equation.
-	//! @return		Magnitude of data (can be used to un-normalize data).
-	void NormalizeData(double * data, int dataLen, int p, bool normailze);
+
 
 	//! \brief Records voice from microphone input.
 	//!
@@ -81,17 +71,14 @@ private:
 	//! @return		Buffer length of voice data recorded.
 	DWORD RecordVoiceData(waveCapture *wav);
 
-	//! \brief Save voice data to disk.
-	//!
-	//! @param wav		waveCapture object to hold recording data.
-	void SaveVoiceData(waveCapture *wav);
+
 
 	//! \brief Update the total pre-recorded buffer with new pre-recorded buffer data.
 	//!
 	//! @param wav		Buffer length of new pre-recorded data.
 	void UpdateTotalPreRecordedWav(int bufferlen, double time);
 
-	void MixAudio(waveCapture *wav);
+
 
 	//! \brief Read pre-recorded wav files after button presses.
 	//!
@@ -99,6 +86,9 @@ private:
 	void ReadPreRecordedWavData(WavFile wav);
 
 public:
+	DWORD bufferLength = 0;	/*!< buffer length of wavBufferChar */
+	double* wavBufferDouble;	/*!< buffer to hold voice data in double format */
+	double* wavBufferDoubleOutput;	/*!< buffer to hold voice data in double format */
 
 	//! \brief Finds the index after header in a wav file where the data is located.
 	//!
@@ -125,7 +115,24 @@ public:
 	//! \brief Read pre-recorded wav files after button presses.
 	//!
 	//! @param sec		The number of seconds to record for (user specified).
-	void StartVoiceRecorder();
+	void Record();
+
+	void FilterVoiceData();
+
+	void MixAudio();
+
+	//! \brief Save voice data to disk.
+	//!
+	//! @param wav		waveCapture object to hold recording data.
+	void SaveVoiceData();
+
+	//! \brief Normalizes a buffer of data using p-norm to a range of -1.0 and 1.0.
+	//!
+	//! @param data		Data to normalize.
+	//! @param dataLen		Length of data buffer.
+	//! @param p		P value for p-norm equation.
+	//! @return		Magnitude of data (can be used to un-normalize data).
+	void NormalizeData(double * data, int dataLen, int p, bool normailze);
 
 
 

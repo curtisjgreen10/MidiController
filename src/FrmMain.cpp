@@ -77,10 +77,20 @@ void FrmMain::startRecorder(Audio* audio)
 	float time1, time2;
 	time1 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
 	printf("time 1: %f\n", time1);
-	MidiGlobalData::recording = true;
+	//task 1
 	audio->DigitalFilterInit(IIR);
-	audio->StartVoiceRecorder();
-	MidiGlobalData::recording = false;
+	//task 2
+	audio->Record();
+	// task 3 normalize data
+	audio->NormalizeData(audio->wavBufferDouble, audio->bufferLength, 4, true);
+	//task 4
+	audio->FilterVoiceData();
+	//task 5 un-normalize data
+	audio->NormalizeData(audio->wavBufferDoubleOutput, audio->bufferLength, 0, false);
+	// task 6
+	audio->MixAudio();
+	// task 7 save filtered voice data
+	audio->SaveVoiceData();
 	time2 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
 	printf("time 2: %f\n", time2);
 

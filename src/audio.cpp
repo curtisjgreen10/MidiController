@@ -43,59 +43,29 @@ void Audio::DigitalFilterInit(FilterType filt)
 	}
 }
 
-void Audio::StartVoiceRecorder()
+void Audio::Record()
 {
+	MidiGlobalData::recording = true;
 	seconds = getSecondsToRecord();
-	pwc = new waveCapture(SAMPLING_RATE, 16, 1);
+	waveRecordObj = new waveCapture(SAMPLING_RATE, 16, 1);
+	RecordVoiceData(waveRecordObj);
+	MidiGlobalData::recording = false;
+}
 
-	RecordVoiceData(pwc);
-
-	// normalize data
-	NormalizeData(wavBufferDouble, bufferLength, 4, true);
-
+void Audio::FilterVoiceData()
+{
 	wavBufferDoubleOutput = new double[bufferLength];
-
 	if (fType == FIR)
 	{
-#if FILTER_TIMER_TEST
-		float time1, time2;
-
-		time1 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		printf("time 1: %f\n", time1);
-#endif
 		for (int i = 0; i < bufferLength; i++)
 		{
 			wavBufferDoubleOutput[i] = firFilt->FirFilterUpdate(&firDat, wavBufferDouble[i]);
 		}
-#if FILTER_TIMER_TEST
-		time2 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		printf("time 2: %f\n", time2);
-
-		printf("FIR filter time: %f\n", (time2 - time1));
-#endif
 	}
 	else if (fType == IIR)
 	{
-#if FILTER_TIMER_TEST
-		float time1, time2;
-
-		time1 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		printf("time 1: %f\n", time1);
-#endif
 		iirFilt->RunIIRFilter(&iirDat, wavBufferDouble, wavBufferDoubleOutput, bufferLength);
-#if FILTER_TIMER_TEST
-		time2 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		printf("time 2: %f\n", time2);
-
-		printf("IIR filter time: %f\n", (time2 - time1));
-#endif
 	}
-
-	// un-normalize data
-	NormalizeData(wavBufferDoubleOutput, bufferLength, 0, false);
-
-	// save filtered voice data
-	SaveVoiceData(pwc);
 }
 
 DWORD Audio::RecordVoiceData(waveCapture *wav)
@@ -155,7 +125,6 @@ DWORD Audio::RecordVoiceData(waveCapture *wav)
 			wavBufferDouble[idx] = (double)ceil(sample);
 			idx++;
 		}
-
 		return bufferLength;
 	}
 	else
@@ -167,39 +136,21 @@ DWORD Audio::RecordVoiceData(waveCapture *wav)
 
 
 
-void Audio::SaveVoiceData(waveCapture *wav)
+void Audio::SaveVoiceData()
 {
 	char byte1 = 0;
 	char byte2 = 0;
 	double temp1 = 0;
 	int16_t sample = 0;
 	int idx = 0;
-
-#if TONE_TEST
-		for (int j = 40; j < bufferLength; j+=2)
-#else
-		for (int j = 0; j < bufferLength; j+=2)
-#endif
-	{
-		// cast back to 16-bit data
-		sample = (int16_t)wavBufferDoubleOutput[idx];
-		// convert 16-bit data back to 8-bit.
-		byte1 = (sample & 0xFF);
-		byte2 = ((sample >> 8) & 0xFF);
-		wavBufferCharTotal[j] = byte1;
-		wavBufferCharTotal[j+1] = byte2;
-		idx++;
-	}
-
-
 #if TONE_TEST != 1
-	MixAudio(wav);
+	MixAudio();
 #endif
 
 #if TONE_TEST
 	wav->saveWAVEChunk(wavBufferCharTotal, bufferLength);
 #else
-	bufferLength = wav->getSuggestedBufferSize();
+	bufferLength = waveRecordObj->getSuggestedBufferSize();
 	wavBufferChar = new char[bufferLength];
 	for (int i = 0; i < seconds; i++)
 	{
@@ -207,21 +158,15 @@ void Audio::SaveVoiceData(waveCapture *wav)
 		{
 			wavBufferChar[j] = wavBufferCharTotal[j +(i * bufferLength)];
 		}
-		wav->saveWAVEChunk(wavBufferChar, bufferLength);
+		waveRecordObj->saveWAVEChunk(wavBufferChar, bufferLength);
 	}
 #endif
 
-	wav->closeWAVEFile();
+	waveRecordObj->closeWAVEFile();
 	printf("wave file closed\n");
-
-	// clean-up the heap
-	//delete[] wavBufferChar;
-	//delete[] wavBufferCharTotal;
-	//delete[] wavBufferDouble;
-	//delete[] wavBufferDoubleOutput;
 }
 
-void Audio::MixAudio(waveCapture *wav)
+void Audio::MixAudio()
 {
 	int idx = 0;
 	char byte1;
@@ -263,7 +208,7 @@ void Audio::MixAudio(waveCapture *wav)
 
 		for (int i = 40; i < bufferLengthPreRec; i+=2)
 		{
-			// convert to byte data to 16 bit little endian
+			// convert byte data to 16 bit little endian
 			sample = 0;
 			byte1 = preRecWavBuffer[i];
 			byte2 = preRecWavBuffer[i+1];
