@@ -23,7 +23,7 @@ class MixQueue {
 
 private:
     int front_, rear_, capacity_, size_;
-    MusicData* array_;
+    MusicData* musicData;
 
 public:
     MixQueue(int capacity);

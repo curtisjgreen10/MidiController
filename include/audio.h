@@ -40,24 +40,23 @@ class Audio
 {
 
 private:
+	FirData firDat;	/*!< fir filter data */
+	IirData iirDat;	/*!< iir filter data */
 
 	int dataIndex;
-	DWORD bufferLengthPreRec = 0;	/*!< buffer length of wavBufferChar */
+	unsigned long bufferLengthPreRec = 0;	/*!< buffer length of wavBufferChar */
 	bool preRecBuffInit = false; /*!< true if space has already been allocated reading pre-recorded wav files */
 
 	char* wavBufferChar;	/*!< buffer to hold raw voice data in char format */
 	int16_t* wavBuffer16bitMixed;	/*!< buffer to hold raw voice data in char format */
 	char* wavBufferCharTotal;	/*!< buffer to hold raw voice data in char format */
-	char* wavBufferCharTotal_test;	/*!< buffer to hold raw voice data in char format */
 	char* preRecWavBuffer;	/*!< buffer to hold pre-recorded wav data */
 	int16_t* preRecWavBuffer16bit;	/*!< buffer to hold pre-recorded wav data */
 	char* totalPreRecWavBuffer;	/*!< buffer to hold total pre-recorded wav data */
 	double normalizeFactor;
 
 	waveCapture *waveRecordObj;	/*!< wave capture object pointer */
-	FirData firDat;	/*!< fir filter data */
 	FirFilter *firFilt;	/*!< fir filter class object pointer */
-	IirData iirDat;	/*!< fir filter data */
 	IirFilter *iirFilt;	/*!< iir filter class object pointer */
 	FilterType fType = FIR; /*!< initialized to fir and reset in init method */
 	long seconds = 0;	/*!< seconds recorded */
@@ -69,7 +68,7 @@ private:
 	//!
 	//! @param wav		waveCapture object to hold recording data.
 	//! @return		Buffer length of voice data recorded.
-	DWORD RecordVoiceData(waveCapture *wav);
+	unsigned long RecordVoiceData(waveCapture *wav);
 
 
 
@@ -86,7 +85,7 @@ private:
 	void ReadPreRecordedWavData(WavFile wav);
 
 public:
-	DWORD bufferLength = 0;	/*!< buffer length of wavBufferChar */
+	unsigned long bufferLength = 0;	/*!< buffer length of wavBufferChar */
 	double* wavBufferDouble;	/*!< buffer to hold voice data in double format */
 	double* wavBufferDoubleOutput;	/*!< buffer to hold voice data in double format */
 
@@ -100,12 +99,12 @@ public:
 	//! \brief Get whether or not the software is recording.
 	//!
 	//! @return True if recording, otherwise false.
-	long getSecondsToRecord();
+	long GetSecondsToRecord();
 
 	//! \brief Set whether or not the software is recording.
 	//!
 	//! @return True if recording, false otherwise.
-	void setSecondsToRecord(long sec);
+	void SetSecondsToRecord(long sec);
 
 	//! \brief Initialize the type of digital filter to be used for mic recording.
 	//!

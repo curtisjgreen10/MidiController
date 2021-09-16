@@ -97,19 +97,19 @@ void FrmMain::startRecorder(Audio* audio)
 	printf("thread time: %f\n", (time2 - time1));
 }
 
-void FrmMain::cleanUpHeap(Audio* audio, Timer * timer)
-{
-	printf("clean up thread started\n");
-	while(MidiGlobalData::recording == true);
-	//delete timer;
-	//delete audio;
-}
+//void FrmMain::cleanUpHeap(Audio* audio, Timer * timer)
+//{
+//	printf("clean up thread started\n");
+//	while(MidiGlobalData::GetRecording() == true);
+//	//delete timer;
+//	//delete audio;
+//}
 
 void FrmMain::on_drum_1_button_clicked()
 {
 	// always play back sound - add to queue if recording
 	PlaySound(TEXT("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/Closed-Hi-Hat-2.wav"), NULL, SND_FILENAME | SND_ASYNC);
-	if(MidiGlobalData::recording)
+	if(MidiGlobalData::GetRecording())
 	{
 		MusicData item;
 		item.file = DRUM_1;
@@ -120,7 +120,7 @@ void FrmMain::on_drum_1_button_clicked()
 
 void FrmMain::on_drum_2_button_clicked()
 {
-	if(MidiGlobalData::recording)
+	if(MidiGlobalData::GetRecording())
 	{
 		MusicData item;
 		item.file = DRUM_2;
@@ -131,7 +131,7 @@ void FrmMain::on_drum_2_button_clicked()
 
 void FrmMain::on_drum_3_button_clicked()
 {
-	if(MidiGlobalData::recording)
+	if(MidiGlobalData::GetRecording())
 	{
 		MusicData item;
 		item.file = DRUM_3;
@@ -142,7 +142,7 @@ void FrmMain::on_drum_3_button_clicked()
 
 void FrmMain::on_drum_4_button_clicked()
 {
-	if(MidiGlobalData::recording)
+	if(MidiGlobalData::GetRecording())
 	{
 		MusicData item;
 		item.file = DRUM_4;
@@ -154,30 +154,30 @@ void FrmMain::on_drum_4_button_clicked()
 void FrmMain::on_btnVolDrum_1_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::drum1vol = btnVolDrum1->get_value();
+	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 1);
 }
 
 void FrmMain::on_btnVolDrum_2_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::drum2vol = btnVolDrum2->get_value();
+	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 2);
 }
 
 void FrmMain::on_btnVolDrum_3_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::drum3vol = btnVolDrum3->get_value();
+	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 3);
 }
 
 void FrmMain::on_btnVolDrum_4_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::drum4vol = btnVolDrum4->get_value();
+	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 4);
 }
 
 void FrmMain::on_cymbal_1_button_clicked()
 {
-	if(MidiGlobalData::recording)
+	if(MidiGlobalData::GetRecording())
 	{
 		MusicData item;
 		item.file = CYMBAL_1;
@@ -188,7 +188,7 @@ void FrmMain::on_cymbal_1_button_clicked()
 
 void FrmMain::on_cymbal_2_button_clicked()
 {
-	if(MidiGlobalData::recording)
+	if(MidiGlobalData::GetRecording())
 	{
 		MusicData item;
 		item.file = CYMBAL_2;
@@ -199,7 +199,7 @@ void FrmMain::on_cymbal_2_button_clicked()
 
 void FrmMain::on_cymbal_3_button_clicked()
 {
-	if(MidiGlobalData::recording)
+	if(MidiGlobalData::GetRecording())
 	{
 		MusicData item;
 		item.file = CYMBAL_3;
@@ -210,7 +210,7 @@ void FrmMain::on_cymbal_3_button_clicked()
 
 void FrmMain::on_cymbal_4_button_clicked()
 {
-	if(MidiGlobalData::recording)
+	if(MidiGlobalData::GetRecording())
 	{
 		MusicData item;
 		item.file = CYMBAL_4;
@@ -222,25 +222,25 @@ void FrmMain::on_cymbal_4_button_clicked()
 void FrmMain::on_btnVolCymbal_1_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::drum1vol = btnVolCymbal1->get_value();
+	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 1);
 }
 
 void FrmMain::on_btnVolCymbal_2_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::drum2vol = btnVolCymbal2->get_value();
+	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 2);
 }
 
 void FrmMain::on_btnVolCymbal_3_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::drum3vol = btnVolCymbal3->get_value();
+	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 3);
 }
 
 void FrmMain::on_btnVolCymbal_4_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::drum4vol = btnVolCymbal4->get_value();
+	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 4);
 }
 
 void FrmMain::on_record_button_clicked()
@@ -257,7 +257,7 @@ void FrmMain::on_record_button_clicked()
 	std::stringstream s;
 	s << ustr.raw();
 	s >> seconds;
-	MidiGlobalData::audioCtrl->setSecondsToRecord(seconds);
+	MidiGlobalData::audioCtrl->SetSecondsToRecord(seconds);
 
 	MidiGlobalData::timer->Start();
 

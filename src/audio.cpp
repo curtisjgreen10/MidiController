@@ -1,32 +1,33 @@
 /*
- * digFilter.cpp
+ * audio.cpp
  *
  *  Created on: Mar 19, 2021
  *      Author: cjgree13
  */
 #include "audio.h"
-#include "gData.h"
 #include "mixqueue.h"
 #include <tgmath.h>
 #include <iostream>
 #include <cmath>
 #include <algorithm>
 
+#include "../include/gData.h"
+
 #define TONE_TEST 0
 #define FILTER_TIMER_TEST 0
 
 
-long Audio::getSecondsToRecord()
+long Audio::GetSecondsToRecord()
 {
 	return seconds;
 }
 
-void Audio::setSecondsToRecord(long sec)
+void Audio::SetSecondsToRecord(long sec)
 {
 	seconds = sec;
 }
 
-
+// option to choose between iir and fir is given only for debugging purposes
 void Audio::DigitalFilterInit(FilterType filt)
 {
 	if (filt == FIR)
@@ -45,11 +46,11 @@ void Audio::DigitalFilterInit(FilterType filt)
 
 void Audio::Record()
 {
-	MidiGlobalData::recording = true;
-	seconds = getSecondsToRecord();
+	MidiGlobalData::SetRecording(true);
+	seconds = GetSecondsToRecord();
 	waveRecordObj = new waveCapture(SAMPLING_RATE, 16, 1);
 	RecordVoiceData(waveRecordObj);
-	MidiGlobalData::recording = false;
+	MidiGlobalData::SetRecording(false);
 }
 
 void Audio::FilterVoiceData()
@@ -68,27 +69,10 @@ void Audio::FilterVoiceData()
 	}
 }
 
-DWORD Audio::RecordVoiceData(waveCapture *wav)
+unsigned long Audio::RecordVoiceData(waveCapture *wav)
 {
 	if(wav->start(0) == 0)
 	{
-
-#if TONE_TEST
-	    std::ifstream infile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/total_signal_unfiltered.wav", std::ios::binary);
-	    if (!infile)
-	    {
-	         std::cout << "Wave::file error: "<< std::endl;
-	    }
-
-	    infile.seekg (0, std::ios::end);   // get length of file
-	    int length = infile.tellg();
-	    infile.seekg (0, std::ios::beg);   // position to start of file
-	    bufferLength = length;
-	    infile.read (wavBufferCharTotal,length);  // read entire file
-	    wavBufferDouble = new double[bufferLength];
-	    wavBufferCharTotal = new char[bufferLength];
-	    wav->createWAVEFile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/total_signal_filtered_IIRC.wav");
-#else
 	    wav->createWAVEFile("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/total_signal_filtered_voice.wav");
 		bufferLength = wav->getSuggestedBufferSize();
 		wavBufferChar = new char[bufferLength];
@@ -103,17 +87,12 @@ DWORD Audio::RecordVoiceData(waveCapture *wav)
 			}
 		}
 
-#endif
 		int idx = 0;
 		char byte1;
 		char byte2;
 		int16_t sample = 0;
-#if TONE_TEST
-		for (int i = 40; i < bufferLength; i+=2)
-#else
 		bufferLength = bufferLength * seconds;
 		for (int i = 0; i < bufferLength; i+=2)
-#endif
 		{
 			// convert to byte data to 16 bit little endian
 			sample = 0;
@@ -138,18 +117,6 @@ DWORD Audio::RecordVoiceData(waveCapture *wav)
 
 void Audio::SaveVoiceData()
 {
-	char byte1 = 0;
-	char byte2 = 0;
-	double temp1 = 0;
-	int16_t sample = 0;
-	int idx = 0;
-#if TONE_TEST != 1
-	MixAudio();
-#endif
-
-#if TONE_TEST
-	wav->saveWAVEChunk(wavBufferCharTotal, bufferLength);
-#else
 	bufferLength = waveRecordObj->getSuggestedBufferSize();
 	wavBufferChar = new char[bufferLength];
 	for (int i = 0; i < seconds; i++)
@@ -160,7 +127,6 @@ void Audio::SaveVoiceData()
 		}
 		waveRecordObj->saveWAVEChunk(wavBufferChar, bufferLength);
 	}
-#endif
 
 	waveRecordObj->closeWAVEFile();
 	printf("wave file closed\n");
@@ -206,21 +172,21 @@ void Audio::MixAudio()
 		ReadPreRecordedWavData(item.file);
 		idx = eventSample;
 
-		for (int i = 40; i < bufferLengthPreRec; i+=2)
+		for (int j = 40; j < bufferLengthPreRec; j+=2)
 		{
 			// convert byte data to 16 bit little endian
 			sample = 0;
-			byte1 = preRecWavBuffer[i];
-			byte2 = preRecWavBuffer[i+1];
+			byte1 = preRecWavBuffer[j];
+			byte2 = preRecWavBuffer[j+1];
 			sample = byte2 << 8;
 			sample |= (byte1 & 0xFF);
 			preRecWavBuffer16bit[idx] = sample;
 			idx++;
 		}
 
-		for (int i = 0; i < bufferLength; i+=2)
+		for (int j = 0; j < bufferLength; j+=2)
 		{
-			wavBuffer16bitMixed[i] = (wavBuffer16bitMixed[i] + preRecWavBuffer16bit[i]) / 2;
+			wavBuffer16bitMixed[j] = (wavBuffer16bitMixed[j] + preRecWavBuffer16bit[j]) / 2;
 		}
 
 		idx = 0;

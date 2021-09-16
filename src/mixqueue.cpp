@@ -6,7 +6,9 @@
  */
 
 #include "mixqueue.h"
+#include <mutex>
 
+std::mutex qLock;
 
 MixQueue::MixQueue(int capacity)
 {
@@ -14,7 +16,7 @@ MixQueue::MixQueue(int capacity)
     front_ = size_ = 0;
 
     rear_ = capacity - 1;
-    array_ = new MusicData[capacity_];
+    musicData = new MusicData[capacity_];
 }
 
 bool MixQueue::isFull()
@@ -34,8 +36,11 @@ void MixQueue::enqueue(MusicData item)
         return;
     }
     rear_ = (rear_ + 1) % capacity_;
-    array_[rear_] = item;
+
+    qLock.lock();
+    musicData[rear_] = item;
     size_ = size_ + 1;
+    qLock.unlock();
 }
 
 MusicData MixQueue::dequeue()
@@ -49,9 +54,11 @@ MusicData MixQueue::dequeue()
         return item;
     }
 
-    item = array_[front_];
+    qLock.lock();
+    item = musicData[front_];
     front_ = (front_ + 1) % capacity_;
     size_ = size_ - 1;
+    qLock.unlock();
     return item;
 }
 
@@ -72,7 +79,7 @@ MusicData MixQueue::front()
         return item;
     }
 
-    item = array_[front_];
+    item = musicData[front_];
     return item;
 }
 
@@ -87,7 +94,7 @@ MusicData MixQueue::rear()
         return item;
     }
 
-    item = array_[rear_];
+    item = musicData[rear_];
     return item;
 }
 #endif
