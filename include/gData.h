@@ -17,13 +17,13 @@ namespace MidiGlobalData
 	extern Timer *timer;
 	extern Audio *audioCtrl;
 
-	void SetMicInput(bool input);
+	bool SetMicInput(bool input);
 	bool GetMicInput();
 
-	void SetRecording(bool input);
+	bool SetRecording(bool input);
 	bool GetRecording();
 
-	void SetDrumVol(double vol, int drumNum);
+	bool SetDrumVol(double vol, int drumNum);
 	double GetDrumVol(int drumNum);
 }
 

@@ -29,11 +29,15 @@ namespace MidiGlobalData
 
 
 
-	void SetMicInput(bool input)
+	bool SetMicInput(bool input)
 	{
-		micLock.lock();
-		micInput = input;
-		micLock.unlock();
+		bool lockStatus = micLock.try_lock();
+		if(lockStatus)
+		{
+			micInput = input;
+			micLock.unlock();
+		}
+		return lockStatus;
 	}
 
 	bool GetMicInput()
@@ -43,11 +47,15 @@ namespace MidiGlobalData
 		micLock.unlock();
 	}
 
-	void SetRecording(bool rec)
+	bool SetRecording(bool rec)
 	{
-		recLock.lock();
-		recording = rec;
-		recLock.unlock();
+		bool lockStatus = recLock.try_lock();
+		if(lockStatus)
+		{
+			micInput = rec;
+			recLock.unlock();
+		}
+		return lockStatus;
 	}
 
 	bool GetRecording()
@@ -57,25 +65,29 @@ namespace MidiGlobalData
 		recLock.unlock();
 	}
 
-	void SetDrumVol(double vol, int drumNum)
+	bool SetDrumVol(double vol, int drumNum)
 	{
-		drumLock.lock();
-		switch(drumNum)
+		bool lockStatus = drumLock.try_lock();
+		if(lockStatus)
 		{
-			case 1:
-				drum1vol = vol;
-				break;
-			case 2:
-				drum2vol = vol;
-				break;
-			case 3:
-				drum3vol = vol;
-				break;
-			case 4:
-				drum4vol = vol;
-				break;
+			switch(drumNum)
+			{
+				case 1:
+					drum1vol = vol;
+					break;
+				case 2:
+					drum2vol = vol;
+					break;
+				case 3:
+					drum3vol = vol;
+					break;
+				case 4:
+					drum4vol = vol;
+					break;
+			}
+			drumLock.lock();
 		}
-		drumLock.lock();
+		return lockStatus;
 	}
 
 	double GetDrumVol(int drumNum)
