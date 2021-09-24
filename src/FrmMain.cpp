@@ -8,11 +8,12 @@
 #include "gData.h"
 #include "mixqueue.h"
 #include <future>
-
+#include "main.h"
+#include <chrono>
 
 using namespace Gtk;
 
-
+static bool gRecording = false;
 
 FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refGlade) :
     Gtk::Window(cobject), builder(refGlade){
@@ -69,13 +70,31 @@ FrmMain::FrmMain(BaseObjectType* cobject, const Glib::RefPtr<Gtk::Builder>& refG
 	btnVolCymbal4->signal_value_changed().connect(sigc::mem_fun(*this, &FrmMain::on_btnVolCymbal_4_value_changed));
 }
 
+void static readRecordVariable()
+{
+	bool lockAcquired = false;
+	for (int attempts = 1; attempts <= 3; attempts++)
+	{
+		// three attempts to acquire lock and read value
+		if (globalData->GetRecording(&gRecording))
+		{
+			lockAcquired = true;
+			break;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
+	}
 
+	if (!lockAcquired)
+	{
+		//dead lock throw error message to user
+	}
+}
 
 void FrmMain::startRecorder(Audio* audio)
 {
 	printf("record thread started\n");
 	float time1, time2;
-	time1 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+	time1 = globalData->timer->GetElapsedTimeMilliSeconds();
 	printf("time 1: %f\n", time1);
 	//task 1
 	audio->DigitalFilterInit(IIR);
@@ -91,7 +110,7 @@ void FrmMain::startRecorder(Audio* audio)
 	audio->MixAudio();
 	// task 7 save filtered voice data
 	audio->SaveVoiceData();
-	time2 = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
+	time2 = globalData->timer->GetElapsedTimeMilliSeconds();
 	printf("time 2: %f\n", time2);
 
 	printf("thread time: %f\n", (time2 - time1));
@@ -100,7 +119,7 @@ void FrmMain::startRecorder(Audio* audio)
 //void FrmMain::cleanUpHeap(Audio* audio, Timer * timer)
 //{
 //	printf("clean up thread started\n");
-//	while(MidiGlobalData::GetRecording() == true);
+//	while(globalData->GetRecording() == true);
 //	//delete timer;
 //	//delete audio;
 //}
@@ -109,146 +128,154 @@ void FrmMain::on_drum_1_button_clicked()
 {
 	// always play back sound - add to queue if recording
 	PlaySound(TEXT("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/Closed-Hi-Hat-2.wav"), NULL, SND_FILENAME | SND_ASYNC);
-	if(MidiGlobalData::GetRecording())
+	readRecordVariable();
+	if(gRecording)
 	{
 		MusicData item;
 		item.file = DRUM_1;
-		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(item);
+		item.msec = globalData->timer->GetElapsedTimeMilliSeconds();
+		globalData->queue->enqueue(item);
 	}
 }
 
 void FrmMain::on_drum_2_button_clicked()
 {
-	if(MidiGlobalData::GetRecording())
+	readRecordVariable();
+	if(gRecording)
 	{
 		MusicData item;
 		item.file = DRUM_2;
-		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(item);
+		item.msec = globalData->timer->GetElapsedTimeMilliSeconds();
+		globalData->queue->enqueue(item);
 	}
 }
 
 void FrmMain::on_drum_3_button_clicked()
 {
-	if(MidiGlobalData::GetRecording())
+	readRecordVariable();
+	if(gRecording)
 	{
 		MusicData item;
 		item.file = DRUM_3;
-		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(item);
+		item.msec = globalData->timer->GetElapsedTimeMilliSeconds();
+		globalData->queue->enqueue(item);
 	}
 }
 
 void FrmMain::on_drum_4_button_clicked()
 {
-	if(MidiGlobalData::GetRecording())
+	readRecordVariable();
+	if(gRecording)
 	{
 		MusicData item;
 		item.file = DRUM_4;
-		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(item);
+		item.msec = globalData->timer->GetElapsedTimeMilliSeconds();
+		globalData->queue->enqueue(item);
 	}
 }
 
 void FrmMain::on_btnVolDrum_1_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 1);
+	globalData->SetDrumVol((double)btnVolCymbal4->get_value(), 1);
 }
 
 void FrmMain::on_btnVolDrum_2_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 2);
+	globalData->SetDrumVol((double)btnVolCymbal4->get_value(), 2);
 }
 
 void FrmMain::on_btnVolDrum_3_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 3);
+	globalData->SetDrumVol((double)btnVolCymbal4->get_value(), 3);
 }
 
 void FrmMain::on_btnVolDrum_4_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 4);
+	globalData->SetDrumVol((double)btnVolCymbal4->get_value(), 4);
 }
 
 void FrmMain::on_cymbal_1_button_clicked()
 {
-	if(MidiGlobalData::GetRecording())
+	readRecordVariable();
+	if(gRecording)
 	{
 		MusicData item;
 		item.file = CYMBAL_1;
-		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(item);
+		item.msec = globalData->timer->GetElapsedTimeMilliSeconds();
+		globalData->queue->enqueue(item);
 	}
 }
 
 void FrmMain::on_cymbal_2_button_clicked()
 {
-	if(MidiGlobalData::GetRecording())
+	readRecordVariable();
+	if(gRecording)
 	{
 		MusicData item;
 		item.file = CYMBAL_2;
-		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(item);
+		item.msec = globalData->timer->GetElapsedTimeMilliSeconds();
+		globalData->queue->enqueue(item);
 	}
 }
 
 void FrmMain::on_cymbal_3_button_clicked()
 {
-	if(MidiGlobalData::GetRecording())
+	readRecordVariable();
+	if(gRecording)
 	{
 		MusicData item;
 		item.file = CYMBAL_3;
-		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(item);
+		item.msec = globalData->timer->GetElapsedTimeMilliSeconds();
+		globalData->queue->enqueue(item);
 	}
 }
 
 void FrmMain::on_cymbal_4_button_clicked()
 {
-	if(MidiGlobalData::GetRecording())
+	readRecordVariable();
+	if(gRecording)
 	{
 		MusicData item;
 		item.file = CYMBAL_4;
-		item.msec = MidiGlobalData::timer->GetElapsedTimeMilliSeconds();
-		MidiGlobalData::queue->enqueue(item);
+		item.msec = globalData->timer->GetElapsedTimeMilliSeconds();
+		globalData->queue->enqueue(item);
 	}
 }
 
 void FrmMain::on_btnVolCymbal_1_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 1);
+	globalData->SetDrumVol((double)btnVolCymbal4->get_value(), 1);
 }
 
 void FrmMain::on_btnVolCymbal_2_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 2);
+	globalData->SetDrumVol((double)btnVolCymbal4->get_value(), 2);
 }
 
 void FrmMain::on_btnVolCymbal_3_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 3);
+	globalData->SetDrumVol((double)btnVolCymbal4->get_value(), 3);
 }
 
 void FrmMain::on_btnVolCymbal_4_value_changed(int data)
 {
 	// update global data with new volume.
-	MidiGlobalData::SetDrumVol((double)btnVolCymbal4->get_value(), 4);
+	globalData->SetDrumVol((double)btnVolCymbal4->get_value(), 4);
 }
 
 void FrmMain::on_record_button_clicked()
 {
 
-	MidiGlobalData::queue = new MixQueue(1000);
-	MidiGlobalData::timer = new Timer();
-	MidiGlobalData::audioCtrl = new Audio();
+	globalData->queue = new MixQueue(1000);
+	globalData->timer = new Timer();
+	globalData->audioCtrl = new Audio();
 
 	printf("button clicked\n");
 
@@ -257,11 +284,11 @@ void FrmMain::on_record_button_clicked()
 	std::stringstream s;
 	s << ustr.raw();
 	s >> seconds;
-	MidiGlobalData::audioCtrl->SetSecondsToRecord(seconds);
+	globalData->audioCtrl->SetSecondsToRecord(seconds);
 
-	MidiGlobalData::timer->Start();
+	globalData->timer->Start();
 
-	std::thread recorderThread(startRecorder, MidiGlobalData::audioCtrl);
+	std::thread recorderThread(startRecorder, globalData->audioCtrl);
 	recorderThread.detach();
 
 }
@@ -289,7 +316,7 @@ void FrmMain::on_playback_button_clicked()
     infile.read (testBuffer,length);  // read entire file
 
     infile.close();
-    int testDataIndex = MidiGlobalData::audioCtrl->FindDataIndex(length, testBuffer);
+    int testDataIndex = globalData->audioCtrl->FindDataIndex(length, testBuffer);
 
 	FILE * pFile1;
 	pFile1 = fopen ("C:/Users/cjgree13/Documents/CSE593/MidiController/MidiController/bin/test_data_lil_E.txt","w");

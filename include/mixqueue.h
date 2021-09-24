@@ -19,6 +19,14 @@ typedef struct
 	float msec;
 } MusicData;
 
+typedef enum QueueStatus
+{
+	FULL = 0,
+	EMPTY,
+	LOCK_UNAVAILABLE,
+	LOCK_ACQUIRED
+} QueueStatus;
+
 class MixQueue {
 
 private:
@@ -29,8 +37,8 @@ public:
     MixQueue(int capacity);
     bool isFull();
     bool isEmpty();
-    void enqueue(MusicData item);
-    MusicData dequeue();
+    QueueStatus enqueue(MusicData item);
+    QueueStatus dequeue(MusicData * item);
     int getQueueSize();
 #if DEAD_CODE
     MusicData front();

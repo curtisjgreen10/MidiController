@@ -5,111 +5,100 @@
  *      Author: cjgree13
  */
 #include "gData.h"
-#include <mutex>
 
-std::mutex micLock;
-std::mutex recLock;
-std::mutex drumLock;
-
-namespace MidiGlobalData
+bool MidiGlobalData::SetMicInput(bool input)
 {
-	MixQueue* queue;
-	Timer *timer;
-	Audio *audioCtrl;
-	bool micInput;		/*!< true if mic is to be routed to output */
-	double drum1vol;		/*!< current volume of drum 1 */
-	double drum2vol;		/*!< current volume of drum 2 */
-	double drum3vol;		/*!< current volume of drum 3 */
-	double drum4vol;		/*!< current volume of drum 4 */
-//	double cymbal1vol;	/*!< current volume of cymbal 1 */
-//	double cymbal2vol;	/*!< current volume of cymbal 2 */
-//	double cymbal3vol;	/*!< current volume of cymbal 3 */
-//	double cymbal4vol;	/*!< current volume of cymbal 4 */
-	bool recording; /*!< true if software is recording */
-
-
-
-	bool SetMicInput(bool input)
+	bool lockStatus = micLock.try_lock();
+	if(lockStatus)
 	{
-		bool lockStatus = micLock.try_lock();
-		if(lockStatus)
-		{
-			micInput = input;
-			micLock.unlock();
-		}
-		return lockStatus;
-	}
-
-	bool GetMicInput()
-	{
-		micLock.lock();
-		return micInput;
+		micInput = input;
 		micLock.unlock();
 	}
+	return lockStatus;
+}
 
-	bool SetRecording(bool rec)
+bool MidiGlobalData::GetMicInput(bool * input)
+{
+	bool lockStatus = micLock.try_lock();
+	if(lockStatus)
 	{
-		bool lockStatus = recLock.try_lock();
-		if(lockStatus)
-		{
-			micInput = rec;
-			recLock.unlock();
-		}
-		return lockStatus;
+		*input = micInput;
+		micLock.unlock();
 	}
+	return lockStatus;
+}
 
-	bool GetRecording()
+bool MidiGlobalData::SetRecording(bool rec)
+{
+	bool lockStatus = recLock.try_lock();
+	if(lockStatus)
 	{
-		recLock.lock();
-		return recording;
+		recording = rec;
 		recLock.unlock();
 	}
+	return lockStatus;
+}
 
-	bool SetDrumVol(double vol, int drumNum)
+bool MidiGlobalData::GetRecording(bool * rec)
+{
+	bool lockStatus = recLock.try_lock();
+	if(lockStatus)
 	{
-		bool lockStatus = drumLock.try_lock();
-		if(lockStatus)
-		{
-			switch(drumNum)
-			{
-				case 1:
-					drum1vol = vol;
-					break;
-				case 2:
-					drum2vol = vol;
-					break;
-				case 3:
-					drum3vol = vol;
-					break;
-				case 4:
-					drum4vol = vol;
-					break;
-			}
-			drumLock.lock();
-		}
-		return lockStatus;
+		*rec = recording;
+		recLock.unlock();
 	}
+	return lockStatus;
+}
 
-	double GetDrumVol(int drumNum)
+bool MidiGlobalData::SetDrumVol(double vol, int drumNum)
+{
+	bool lockStatus = drumLock.try_lock();
+	if(lockStatus)
 	{
-		drumLock.lock();
 		switch(drumNum)
 		{
 			case 1:
-				return drum1vol;
+				drum1vol = vol;
 				break;
 			case 2:
-				return drum2vol;
+				drum2vol = vol;
 				break;
 			case 3:
-				return drum3vol;
+				drum3vol = vol;
 				break;
 			case 4:
-				return drum4vol;
+				drum4vol = vol;
+				break;
+		}
+		drumLock.lock();
+	}
+	return lockStatus;
+}
+
+bool MidiGlobalData::GetDrumVol(int drumNum, double * vol)
+{
+	bool lockStatus = drumLock.try_lock();
+	if (lockStatus)
+	{
+		switch(drumNum)
+		{
+			case 1:
+				*vol = drum1vol;
+				break;
+			case 2:
+				*vol = drum2vol;
+				break;
+			case 3:
+				*vol = drum3vol;
+				break;
+			case 4:
+				*vol = drum4vol;
 				break;
 			default:
 				return 0;
 		}
 		drumLock.lock();
 	}
+	return lockStatus;
 }
+

@@ -10,21 +10,39 @@
 
 #include "mixqueue.h"
 #include "timer.h"
+#include <mutex>
 
-namespace MidiGlobalData
+class MidiGlobalData
 {
-	extern MixQueue* queue;
-	extern Timer *timer;
-	extern Audio *audioCtrl;
+
+private:
+	std::mutex micLock;
+	std::mutex recLock;
+	std::mutex drumLock;
+	bool micInput;		/*!< true if mic is to be routed to output */
+	double drum1vol;		/*!< current volume of drum 1 */
+	double drum2vol;		/*!< current volume of drum 2 */
+	double drum3vol;		/*!< current volume of drum 3 */
+	double drum4vol;		/*!< current volume of drum 4 */
+//	double cymbal1vol;	/*!< current volume of cymbal 1 */
+//	double cymbal2vol;	/*!< current volume of cymbal 2 */
+//	double cymbal3vol;	/*!< current volume of cymbal 3 */
+//	double cymbal4vol;	/*!< current volume of cymbal 4 */
+	bool recording; /*!< true if software is recording */
+
+public:
+	MixQueue* queue;
+	Timer *timer;
+	Audio *audioCtrl;
 
 	bool SetMicInput(bool input);
-	bool GetMicInput();
+	bool GetMicInput(bool * input);
 
 	bool SetRecording(bool input);
-	bool GetRecording();
+	bool GetRecording(bool * rec);
 
 	bool SetDrumVol(double vol, int drumNum);
-	double GetDrumVol(int drumNum);
-}
+	bool GetDrumVol(int drumNum,  double * vol);
+};
 
 #endif /* INCLUDE_MIDIGLOBALDATA_H_ */

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <cmath>
 #include <algorithm>
+#include "main.h"
 
 #include "../include/gData.h"
 
@@ -46,11 +47,11 @@ void Audio::DigitalFilterInit(FilterType filt)
 
 void Audio::Record()
 {
-	MidiGlobalData::SetRecording(true);
+	globalData->SetRecording(true);
 	seconds = GetSecondsToRecord();
 	waveRecordObj = new waveCapture(SAMPLING_RATE, 16, 1);
 	RecordVoiceData(waveRecordObj);
-	MidiGlobalData::SetRecording(false);
+	globalData->SetRecording(false);
 }
 
 void Audio::FilterVoiceData()
@@ -140,7 +141,7 @@ void Audio::MixAudio()
 	int16_t sample = 0;
 	MusicData item;
 
-	if (MidiGlobalData::queue->isEmpty())
+	if (globalData->queue->isEmpty())
 	{
 		// no buttons pushed during recording, no mixed required
 		return;
@@ -164,9 +165,9 @@ void Audio::MixAudio()
 	float sec = 0;
 	int eventSample = 0;
 	preRecWavBuffer16bit = new int16_t[bufferLength];
-	for (int i = 0; i < MidiGlobalData::queue->getQueueSize(); i++)
+	for (int i = 0; i < globalData->queue->getQueueSize(); i++)
 	{
-		item = MidiGlobalData::queue->dequeue();
+		globalData->queue->dequeue(&item);
 		sec = item.msec / 1000.0; //convert to seconds
 		eventSample = sec * SAMPLING_RATE; // get the sample at which the button press occured
 		ReadPreRecordedWavData(item.file);

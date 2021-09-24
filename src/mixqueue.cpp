@@ -29,37 +29,49 @@ bool MixQueue::isEmpty()
     return (size_ == 0);
 }
 
-void MixQueue::enqueue(MusicData item)
+QueueStatus MixQueue::enqueue(MusicData item)
 {
     if (isFull())
     {
-        return;
+        return FULL;
     }
     rear_ = (rear_ + 1) % capacity_;
 
-    qLock.lock();
-    musicData[rear_] = item;
-    size_ = size_ + 1;
-    qLock.unlock();
+    if (qLock.try_lock())
+    {
+        musicData[rear_] = item;
+        size_ = size_ + 1;
+        qLock.unlock();
+        return LOCK_ACQUIRED;
+    }
+    else
+    {
+    	return LOCK_UNAVAILABLE;
+    }
 }
 
-MusicData MixQueue::dequeue()
+QueueStatus MixQueue::dequeue(MusicData * item)
 {
-	MusicData item;
-	item.file = NONE;
-	item.msec = 0;
+	item->file = NONE;
+	item->msec = 0;
 
     if (isEmpty())
     {
-        return item;
+        return EMPTY;
     }
 
-    qLock.lock();
-    item = musicData[front_];
-    front_ = (front_ + 1) % capacity_;
-    size_ = size_ - 1;
-    qLock.unlock();
-    return item;
+    if (qLock.try_lock())
+    {
+        *item = musicData[front_];
+        front_ = (front_ + 1) % capacity_;
+        size_ = size_ - 1;
+        qLock.unlock();
+        return LOCK_ACQUIRED;
+    }
+    else
+    {
+    	return LOCK_UNAVAILABLE;
+    }
 }
 
 int MixQueue::getQueueSize()
